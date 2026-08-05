@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RideSafe
 
-## Getting Started
+RideSafe is a school transport management platform for tracking buses in
+real time, managing student attendance and pickup/drop-off, handling
+parent registration and billing, and giving school admins a single
+dashboard to run their fleet.
 
-First, run the development server:
+Live at **[ridesafe.com.my](https://ridesafe.com.my)**.
+
+## Features
+
+- **Real-time bus tracking** with a layered GPS source chain — dedicated
+  hardware trackers (Wialon, Katsana) with automatic fallback to the
+  driver's mobile phone GPS, shown live on an admin map.
+- **Attendance management** — daily roster per route/trip with
+  pick-up / drop-off / absent status, corrections, and CSV export.
+- **Fleet & route management** — buses, routes, stops, driver
+  assignment, with full create/edit/delete for every entity.
+- **Student & parent registration** — public self-service sign-up form
+  gated behind payment (via [Billplz](https://www.billplz.com)); a
+  parent account and student record are created automatically once
+  payment is confirmed.
+- **Billing** — invoice generation via Bukku, plus the Billplz payment
+  flow for registration fees.
+- **Driver app** — trip start/stop, student check-in, offline queueing
+  of attendance/location updates.
+- **Parent app** — live trip view, notifications, ratings, lost & found.
+- **Admin console** — users, students, fleet, schedules, maintenance
+  logs, announcements, academic calendar, analytics, multi-organisation
+  support for Super Admins.
+- **Multi-language** — English, Bahasa Malaysia, and Chinese.
+- **Emergency alerts**, **overcrowding alerts**, **night-bus curfew
+  alerts**, and role-based access control (Admin / School Admin /
+  Driver / Parent / Super Admin).
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router, Turbopack) + React 19 + TypeScript
+- [Prisma](https://www.prisma.io) ORM on PostgreSQL
+- Redis (pub/sub for live location updates)
+- JWT-based auth (`jose`), bcrypt password hashing
+- Leaflet / react-leaflet for maps, Framer Motion for UI, Recharts for analytics
+- Docker + docker-compose for deployment
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20+
+- PostgreSQL
+- Redis
+- Docker & Docker Compose (for containerized deployment)
+
+### Local development
 
 ```bash
+npm install
+cp .env.example .env      # fill in DATABASE_URL, JWT_SECRET, etc.
+npm run db:push           # sync Prisma schema to your database
+npm run db:seed           # optional — creates test accounts
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See [`.env.example`](.env.example) for local development and
+[`.env.production.example`](.env.production.example) for the full set
+used in production (copy to `.env.production` and fill in real values —
+`docker-compose.yml` reads from this file via `env_file`).
 
-## Learn More
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis connection string |
+| `JWT_SECRET` / `NEXTAUTH_SECRET` | Auth token signing secrets |
+| `WIALON_TOKEN` | Wialon GPS Hosting API access token |
+| `KATSANA_CLIENT_ID` / `KATSANA_CLIENT_SECRET` | Katsana fleet tracker API credentials |
+| `BUKKU_API_KEY` | Bukku invoicing API key |
+| `BILLPLZ_API_KEY` / `BILLPLZ_COLLECTION_ID` / `BILLPLZ_X_SIGNATURE_KEY` | Billplz payment gateway — registration payments run in a built-in mock mode when unset |
+| `BILLPLZ_SANDBOX` | `"true"`/`"false"` — use Billplz sandbox vs production API |
+| `REGISTRATION_FEE_AMOUNT` | One-time registration fee (RM), defaults to 50 |
 
-To learn more about Next.js, take a look at the following resources:
+### Useful scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev              # start dev server
+npm run build             # production build
+npm run start              # run production build
+npm run lint                # lint
+npm run db:generate        # regenerate Prisma client
+npm run db:push             # push schema to database (no migration history)
+npm run db:migrate           # apply migrations (production)
+npm run db:studio             # open Prisma Studio
+npm run db:seed                # seed test accounts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Deployment (Docker)
 
-## Deploy on Vercel
+```bash
+cp .env.production.example .env.production   # fill in real values
+docker compose build ridesafe
+docker compose up -d
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This starts three containers: `ridesafe-app` (Next.js, port 3500),
+`ridesafe-db` (PostgreSQL), and `ridesafe-cache` (Redis). Nginx +
+Certbot in front handle the `ridesafe.com.my` / `www.ridesafe.com.my`
+domain and SSL (see `setup_ssl.mjs`, kept out of version control since
+it embeds server credentials).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project structure
+
+```
+src/
+  app/
+    admin/            Admin dashboard (tabbed SPA)
+    driver/            Driver app
+    parent/              Parent app
+    student-form/          Public registration form
+    register/mock-pay/       Simulated Billplz checkout (mock mode only)
+    api/                       All backend routes (REST-style, Next.js route handlers)
+  components/
+    admin/                     One component per admin dashboard tab
+  lib/
+    adapters/                    Wialon / Katsana / Bukku / Billplz integrations
+    services/                      Tracking, payment, and registration business logic
+    auth.ts, prisma.ts, redis.ts       Core infrastructure
+  i18n/                                 en / ms / zh translations
+prisma/
+  schema.prisma                          Data model
+```
+
+## Roles
+
+| Role | Access |
+|---|---|
+| `SUPER_ADMIN` | All organisations, global user management |
+| `ADMIN` / `SCHOOL_ADMIN` | Single-organisation admin dashboard |
+| `DRIVER` | Driver app — trip control, student check-in |
+| `PARENT` | Parent app — live tracking, notifications, billing |
+
+## License
+
+Proprietary — all rights reserved.
