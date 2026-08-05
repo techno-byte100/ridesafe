@@ -1,0 +1,21 @@
+{
+    "name": "RideSafe",
+    "short_name": "RideSafe",
+    "description": "Premium application for managing school bus pickups",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#111827",
+    "theme_color": "#FFD100",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/favicon.ico",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

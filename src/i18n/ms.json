@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "overview": "Gambaran",
+    "attendance": "Kehadiran",
+    "users": "Pengguna",
+    "students": "Pelajar",
+    "fleet": "Armada & Laluan",
+    "liveTrips": "Perjalanan Langsung",
+    "analytics": "Analitik",
+    "messages": "Mesej",
+    "history": "Sejarah Perjalanan",
+    "schedule": "Jadual",
+    "lostFound": "Hilang & Jumpa",
+    "maintenance": "Penyelenggaraan",
+    "announcements": "Pengumuman"
+  },
+  "common": {
+    "loading": "Memuatkan...",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Padam",
+    "search": "Cari...",
+    "export": "Eksport",
+    "logout": "Log Keluar",
+    "submit": "Hantar",
+    "close": "Tutup",
+    "confirm": "Sahkan",
+    "back": "Kembali",
+    "next": "Seterusnya",
+    "noData": "Tiada data",
+    "success": "Berjaya!",
+    "error": "Sesuatu tidak kena"
+  },
+  "auth": {
+    "login": "Log Masuk",
+    "email": "Emel",
+    "password": "Kata Laluan",
+    "loginTitle": "Selamat Datang ke RideSafe",
+    "loginSubtitle": "Log masuk ke akaun anda"
+  },
+  "parent": {
+    "title": "Papan Pemuka Ibu Bapa",
+    "trackBus": "Jejak Bas",
+    "myChildren": "Anak-Anak Saya",
+    "notifications": "Pemberitahuan",
+    "sos": "🆘 Kecemasan SOS",
+    "sosConfirm": "Adakah anda pasti mahu menghantar amaran kecemasan?",
+    "sosSent": "Amaran kecemasan dihantar!",
+    "rateTripTitle": "Nilaikan Perjalanan Anda",
+    "rateSubmit": "Hantar Penilaian",
+    "lostReport": "Lapor Barang Hilang",
+    "schedule": "Jadual Bas",
+    "tripHistory": "Sejarah Perjalanan",
+    "greenScore": "Skor Eko",
+    "ePass": "Pas Digital"
+  },
+  "driver": {
+    "title": "Papan Pemuka Pemandu",
+    "startTrip": "Mula Perjalanan",
+    "endTrip": "Tamat Perjalanan",
+    "panic": "⚠️ BUTANG PANIK",
+    "pickup": "Ambil",
+    "dropoff": "Hantar",
+    "absent": "Tidak Hadir",
+    "camera": "Foto Pengesahan",
+    "shift": "Jadual Saya",
+    "tripHistory": "Sejarah Perjalanan"
+  },
+  "admin": {
+    "title": "Papan Pemuka Pentadbir",
+    "subtitle": "Sistem Pengurusan CRM dan Armada",
+    "addStudent": "Tambah Pelajar",
+    "exportCSV": "📥 Eksport CSV",
+    "exportPDF": "📄 Eksport PDF",
+    "broadcast": "Hantar Pengumuman",
+    "optimize": "Optimumkan Laluan",
+    "addShift": "Tambah Syif",
+    "addMaintenance": "Log Penyelenggaraan"
+  },
+  "leaderboard": {
+    "title": "🌿 Carta Hijau",
+    "rank": "Kedudukan",
+    "student": "Pelajar",
+    "score": "Skor Eko",
+    "badge": "Lencana"
+  },
+  "settings": {
+    "language": "Bahasa",
+    "english": "English",
+    "malay": "Bahasa Malaysia",
+    "chinese": "中文"
+  }
+}

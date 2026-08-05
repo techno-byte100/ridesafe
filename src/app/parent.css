@@ -1,0 +1,98 @@
+/* Parent Mobile Theme Overrides (Dark Premium Theme) */
+.mobile-wrapper {
+    background-color: #0f172a;
+    /* dark slate background for desktop view */
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.mobile-theme {
+    /* Premium Bus Theme Variables */
+    --primary: #FFD100;
+    --primary-hover: #F5A623;
+    --bg-color: #111827;
+    /* Dark navy/slate */
+    --surface: #1E293B;
+    /* Surface slate */
+    --surface-border: rgba(255, 255, 255, 0.08);
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --success: #10B981;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    min-height: 100vh;
+    width: 100%;
+    max-width: 480px;
+    /* Constrain for web to look like a phone */
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    position: relative;
+    font-family: 'Roboto', -apple-system, sans-serif;
+    overflow-x: hidden;
+}
+
+.mobile-theme .mobile-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    margin-bottom: 16px;
+    border: 1px solid var(--surface-border);
+}
+
+.mobile-theme .mobile-header {
+    background: linear-gradient(160deg, #1e1b4b 0%, #312e81 45%, #1e3a5f 100%);
+    color: #f1f5f9;
+    padding: 32px 20px 44px 20px;
+    border-bottom-left-radius: 36px;
+    border-bottom-right-radius: 36px;
+    margin-bottom: -32px;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 12px 36px rgba(49, 46, 129, 0.45);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-theme .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    max-width: 480px;
+    background: rgba(30, 41, 59, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 0;
+    border-top: 1px solid var(--surface-border);
+    z-index: 50;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.mobile-theme .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #64748B;
+    font-size: 12px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.mobile-theme .nav-item.active {
+    color: var(--primary);
+}
+
+.mobile-theme .gradient-text {
+    background: linear-gradient(135deg, #FFD100 0%, #F5A623 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}

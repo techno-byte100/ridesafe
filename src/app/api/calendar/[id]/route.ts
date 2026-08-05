@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { getUserFromSession } from '@/lib/auth'
+
+// Next.js 15: params is now a Promise
+type RouteContext = { params: Promise<{ id: string }> }
+
+export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  try {
+    const session = await getUserFromSession()
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(session.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+
+    if (session.role !== 'SUPER_ADMIN') {
+      const user = await prisma.user.findUnique({ where: { id: session.id }, select: { organizationId: true } })
+      const existing = await prisma.academicEvent.findUnique({ where: { id }, select: { organizationId: true } })
+      if (!existing || (existing.organizationId && existing.organizationId !== user?.organizationId)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
+    const body = await request.json()
+    const { title, description, startDate, endDate, type, isPublic, color } = body
+
+    const updatedEvent = await prisma.academicEvent.update({
+      where: { id },
+      data: {
+        title,
+        description,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : endDate === null ? null : undefined,
+        type,
+        isPublic,
+        color,
+      },
+    })
+
+    return NextResponse.json({ event: updatedEvent })
+  } catch (error) {
+    console.error('Calendar PATCH error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  try {
+    const session = await getUserFromSession()
+    if (!session || !['ADMIN', 'SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(session.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+
+    if (session.role !== 'SUPER_ADMIN') {
+      const user = await prisma.user.findUnique({ where: { id: session.id }, select: { organizationId: true } })
+      const existing = await prisma.academicEvent.findUnique({ where: { id }, select: { organizationId: true } })
+      if (!existing || (existing.organizationId && existing.organizationId !== user?.organizationId)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
+    await prisma.academicEvent.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Calendar DELETE error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

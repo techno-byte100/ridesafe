@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "overview": "概览",
+    "attendance": "考勤",
+    "users": "用户",
+    "students": "学生",
+    "fleet": "车队与路线",
+    "liveTrips": "实时行程",
+    "analytics": "数据分析",
+    "messages": "消息",
+    "history": "行程历史",
+    "schedule": "时间表",
+    "lostFound": "失物招领",
+    "maintenance": "车辆维护",
+    "announcements": "公告"
+  },
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "search": "搜索...",
+    "export": "导出",
+    "logout": "退出登录",
+    "submit": "提交",
+    "close": "关闭",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步",
+    "noData": "暂无数据",
+    "success": "成功！",
+    "error": "出现错误"
+  },
+  "auth": {
+    "login": "登录",
+    "email": "电子邮件",
+    "password": "密码",
+    "loginTitle": "欢迎使用 RideSafe",
+    "loginSubtitle": "登录您的账户"
+  },
+  "parent": {
+    "title": "家长面板",
+    "trackBus": "追踪校车",
+    "myChildren": "我的孩子",
+    "notifications": "通知",
+    "sos": "🆘 紧急求助",
+    "sosConfirm": "确定要发送紧急警报吗？",
+    "sosSent": "紧急警报已发送！",
+    "rateTripTitle": "评价您的行程",
+    "rateSubmit": "提交评价",
+    "lostReport": "报告遗失物品",
+    "schedule": "校车时刻表",
+    "tripHistory": "行程历史",
+    "greenScore": "环保分数",
+    "ePass": "电子通行证"
+  },
+  "driver": {
+    "title": "司机面板",
+    "startTrip": "开始行程",
+    "endTrip": "结束行程",
+    "panic": "⚠️ 紧急按钮",
+    "pickup": "接载",
+    "dropoff": "送下",
+    "absent": "缺席",
+    "camera": "验证照片",
+    "shift": "我的班表",
+    "tripHistory": "行程历史"
+  },
+  "admin": {
+    "title": "管理员面板",
+    "subtitle": "车队管理系统",
+    "addStudent": "添加学生",
+    "exportCSV": "📥 导出CSV",
+    "exportPDF": "📄 导出PDF",
+    "broadcast": "发送公告",
+    "optimize": "优化路线",
+    "addShift": "添加班次",
+    "addMaintenance": "维护记录"
+  },
+  "leaderboard": {
+    "title": "🌿 绿色排行榜",
+    "rank": "排名",
+    "student": "学生",
+    "score": "环保分数",
+    "badge": "徽章"
+  },
+  "settings": {
+    "language": "语言",
+    "english": "English",
+    "malay": "Bahasa Malaysia",
+    "chinese": "中文"
+  }
+}

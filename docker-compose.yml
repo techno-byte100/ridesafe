@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ridesafe-db
+    restart: always
+    environment:
+      - POSTGRES_USER=ridesafe
+      - POSTGRES_PASSWORD=ridesafe_pass
+      - POSTGRES_DB=ridesafe_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: ridesafe-cache
+    restart: always
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+
+  ridesafe:
+    build: .
+    container_name: ridesafe-app
+    restart: always
+    ports:
+      - "3500:3000"
+    env_file:
+      - .env.production
+    depends_on:
+      - postgres
+      - redis
+
+
+
+volumes:
+  postgres_data:
+  redis_data:

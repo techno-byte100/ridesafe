@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "overview": "Overview",
+    "attendance": "Attendance",
+    "users": "Users",
+    "students": "Students",
+    "fleet": "Fleet & Routes",
+    "liveTrips": "Live Trips",
+    "analytics": "Analytics",
+    "messages": "Messages",
+    "history": "Trip History",
+    "schedule": "Schedule",
+    "lostFound": "Lost & Found",
+    "maintenance": "Maintenance",
+    "announcements": "Announcements"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "search": "Search...",
+    "export": "Export",
+    "logout": "Logout",
+    "submit": "Submit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "noData": "No data available",
+    "success": "Success!",
+    "error": "Something went wrong"
+  },
+  "auth": {
+    "login": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "loginTitle": "Welcome to RideSafe",
+    "loginSubtitle": "Sign in to your account"
+  },
+  "parent": {
+    "title": "Parent Dashboard",
+    "trackBus": "Track Bus",
+    "myChildren": "My Children",
+    "notifications": "Notifications",
+    "sos": "🆘 SOS Emergency",
+    "sosConfirm": "Are you sure you want to send an emergency alert?",
+    "sosSent": "Emergency alert sent!",
+    "rateTripTitle": "Rate Your Ride",
+    "rateSubmit": "Submit Rating",
+    "lostReport": "Report Lost Item",
+    "schedule": "Bus Schedule",
+    "tripHistory": "Trip History",
+    "greenScore": "Eco Score",
+    "ePass": "Digital Pass"
+  },
+  "driver": {
+    "title": "Driver Dashboard",
+    "startTrip": "Start Trip",
+    "endTrip": "End Trip",
+    "panic": "⚠️ PANIC BUTTON",
+    "pickup": "Pick Up",
+    "dropoff": "Drop Off",
+    "absent": "Absent",
+    "camera": "Verify Photo",
+    "shift": "My Schedule",
+    "tripHistory": "Trip History"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "CRM and Fleet Management System",
+    "addStudent": "Add Student",
+    "exportCSV": "📥 Export CSV",
+    "exportPDF": "📄 Export PDF",
+    "broadcast": "Send Announcement",
+    "optimize": "Optimize Route",
+    "addShift": "Add Shift",
+    "addMaintenance": "Log Maintenance"
+  },
+  "leaderboard": {
+    "title": "🌿 Green Leaderboard",
+    "rank": "Rank",
+    "student": "Student",
+    "score": "Eco Score",
+    "badge": "Badge"
+  },
+  "settings": {
+    "language": "Language",
+    "english": "English",
+    "malay": "Bahasa Malaysia",
+    "chinese": "中文"
+  }
+}

@@ -1,0 +1,9 @@
+.next
+node_modules
+.git
+*.log
+.env
+.env.local
+docker-compose.yml
+Dockerfile
+deploy.sh
