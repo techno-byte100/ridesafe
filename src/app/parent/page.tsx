@@ -31,11 +31,11 @@ interface MessageData {
   id: string; content: string; read: boolean; createdAt: string;
   sender: { name: string };
 }
-interface UserRef { id: string; name: string; role: string }
 
 const BusMap = dynamic(() => import('@/components/BusMap'), { ssr: false })
 
 import { useAudio } from '@/hooks/useAudio'
+import { useTranslation } from '@/i18n/provider'
 import CalendarCard from '@/components/CalendarCard'
 import { Target, Flame, ShieldCheck, Sunrise, AlertTriangle, CheckCircle, AlertCircle, Trophy, Medal, Award, Phone, Bus, Clock, Clipboard, Home, XCircle, User, Settings, Bell, HelpCircle, LogOut, Globe } from 'lucide-react'
 
@@ -53,6 +53,7 @@ function getLevelLabel(lvl: number): string {
 }
 
 export default function ParentDashboard() {
+  const { locale, setLocale } = useTranslation()
   const [students, setStudents] = useState<StudentData[]>([])
   const [drivers, setDrivers] = useState<DriverData[]>([])
   const [notifications, setNotifications] = useState<NotifData[]>([])
@@ -70,6 +71,12 @@ export default function ParentDashboard() {
   const [msgContent, setMsgContent] = useState('')
   const [sending, setSending] = useState(false)
   const [msgToast, setMsgToast] = useState('')
+
+  // Profile menu state
+  const [me, setMe] = useState<{ name: string; email: string; phone?: string } | null>(null)
+  const [profilePanel, setProfilePanel] = useState<'INFO' | 'HELP' | null>(null)
+  const [profileNotice, setProfileNotice] = useState('')
+  const showProfileNotice = (msg: string) => { setProfileNotice(msg); setTimeout(() => setProfileNotice(''), 3000) }
 
   // App Unlock & Audio State
   const [appUnlocked, setAppUnlocked] = useState(false)
@@ -122,16 +129,21 @@ export default function ParentDashboard() {
     // Initial fetch including location
     const fetchInitialData = async () => {
       try {
-        const [studentsRes, locationRes, notifRes, msgRes] = await Promise.all([
+        const [studentsRes, locationRes, notifRes, msgRes, meRes] = await Promise.all([
           fetch('/api/students'),
           fetch('/api/location'),
           fetch('/api/notifications'),
           fetch('/api/messages'),
+          fetch('/api/auth/me'),
         ])
         const studentsData = await studentsRes.json()
         const locationData = await locationRes.json()
         const notificationsData = await notifRes.json()
         const msgData = await msgRes.json()
+        if (meRes.ok) {
+          const meData = await meRes.json()
+          if (meData.user) setMe(meData.user)
+        }
 
         if (studentsData.error === 'Unauthorized') { router.push('/'); return }
 
@@ -232,13 +244,13 @@ export default function ParentDashboard() {
     if (!msgContent.trim()) return
     setSending(true)
     try {
-      // Find an admin to message (fetch from users API or use a fixed lookup)
-      const usersRes = await fetch('/api/admin/users').catch(() => null)
+      // Find an admin to message via the parent-safe school-contact lookup
+      // (the full user list endpoint is admin-only and always rejects parents)
+      const contactRes = await fetch('/api/messages/school-contact').catch(() => null)
       let adminId: string | null = null
-      if (usersRes && usersRes.ok) {
-        const ud = await usersRes.json()
-        const admin = (ud.users || []).find((u: UserRef) => ['ADMIN','SUPER_ADMIN','SCHOOL_ADMIN'].includes(u.role))
-        adminId = admin?.id || null
+      if (contactRes && contactRes.ok) {
+        const cd = await contactRes.json()
+        adminId = cd.admin?.id || null
       }
       if (!adminId) { setMsgToast('No admin found to message'); setSending(false); return }
       const res = await fetch('/api/messages', {
@@ -732,16 +744,19 @@ export default function ParentDashboard() {
 
               <div style={{ background:'var(--surface)', border:'1px solid var(--surface-border)', borderRadius:16, overflow:'hidden', boxShadow:'0 1px 3px rgba(0,0,0,0.05)' }}>
                 {[
-                  { icon:<User size={20}/>, label:'Personal Information' },
-                  { icon:<Settings size={20}/>, label:'Settings & Preferences' },
-                  { icon:<Bell size={20}/>, label:'Notification Settings' },
-                  { icon:<HelpCircle size={20}/>, label:'Help Center' },
-                ].map(({ icon, label }, i, arr) => (
+                  { icon:<User size={20}/>, label:'Personal Information', onClick: () => setProfilePanel(p => p === 'INFO' ? null : 'INFO') },
+                  { icon:<Settings size={20}/>, label:'Settings & Preferences', onClick: () => showProfileNotice('Settings & Preferences is coming soon') },
+                  { icon:<Bell size={20}/>, label:'Notification Settings', onClick: () => showProfileNotice('Notification Settings is coming soon — see Home for your activity feed') },
+                  { icon:<HelpCircle size={20}/>, label:'Help Center', onClick: () => setProfilePanel(p => p === 'HELP' ? null : 'HELP') },
+                ].map(({ icon, label, onClick }, i, arr) => (
                   <div key={label} style={{ display:'flex', alignItems:'center', padding:'18px 16px', borderBottom: i<arr.length-1 ? '1px solid var(--surface-border)' : 'none', cursor:'pointer' }}
-                    onClick={() => {}}>
+                    onClick={onClick}>
                     <span style={{ fontSize:20, marginRight:14 }}>{icon}</span>
                     <div style={{ flex:1, fontSize:'15px', fontWeight:500 }}>{label}</div>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"
+                      style={{ transform: (label === 'Personal Information' && profilePanel === 'INFO') || (label === 'Help Center' && profilePanel === 'HELP') ? 'rotate(90deg)' : 'none', transition:'transform 0.15s' }}>
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
                   </div>
                 ))}
                 <div onClick={handleLogout} style={{ display:'flex', alignItems:'center', padding:'18px 16px', cursor:'pointer', background:'rgba(239,68,68,0.05)' }}>
@@ -750,24 +765,49 @@ export default function ParentDashboard() {
                 </div>
               </div>
 
+              {profileNotice && (
+                <motion.div initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }}
+                  style={{ marginTop:10, padding:'10px 14px', borderRadius:10, background:'var(--surface-2)', color:'var(--text-muted)', fontSize:13, textAlign:'center' }}>
+                  {profileNotice}
+                </motion.div>
+              )}
+
+              {profilePanel === 'INFO' && (
+                <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} className="mobile-card" style={{ padding:'18px 16px', marginTop:10 }}>
+                  {me ? (
+                    <div style={{ display:'grid', gap:10 }}>
+                      <div><div style={{ fontSize:11, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>Name</div><div style={{ fontSize:15, fontWeight:600 }}>{me.name}</div></div>
+                      <div><div style={{ fontSize:11, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>Email</div><div style={{ fontSize:15 }}>{me.email}</div></div>
+                      {me.phone && <div><div style={{ fontSize:11, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'.05em' }}>Phone</div><div style={{ fontSize:15 }}>{me.phone}</div></div>}
+                      <div style={{ fontSize:12, color:'var(--text-dim)', marginTop:4 }}>Contact the school (via Messages) to update your details.</div>
+                    </div>
+                  ) : <div style={{ color:'var(--text-muted)', fontSize:14 }}>Loading…</div>}
+                </motion.div>
+              )}
+
+              {profilePanel === 'HELP' && (
+                <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} className="mobile-card" style={{ padding:'18px 16px', marginTop:10 }}>
+                  <div style={{ fontSize:14, lineHeight:1.6, color:'var(--text-main)' }}>
+                    Need help with pickup times, routes, or your child&apos;s account? Use the <strong>Messages</strong> tab to reach the transport office directly — that&apos;s the fastest way to get a response.
+                  </div>
+                </motion.div>
+              )}
+
               {/* Language Selector */}
               <div className="mobile-card" style={{ padding:'16px', marginTop:14 }}>
                 <div style={{ fontWeight:700, fontSize:15, marginBottom:10, display:'flex', alignItems:'center', gap:6 }}><Globe size={18}/> Language / Bahasa / 语言</div>
                 <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                   {[
-                    { code:'en', label:'EN', fullName:'English' },
-                    { code:'ms', label:'MS', fullName:'Bahasa Malaysia' },
-                    { code:'zh', label:'ZH', fullName:'中文' },
-                  ].map(l => {
-                    const saved = typeof window !== 'undefined' ? localStorage.getItem('ridesafe-locale') || 'en' : 'en'
-                    return (
-                      <motion.button key={l.code} whileTap={{ scale:0.95 }}
-                        onClick={() => { localStorage.setItem('ridesafe-locale', l.code); window.location.reload() }}
-                        style={{ padding:'8px 14px', background: saved === l.code ? 'var(--primary)' : 'var(--surface-2)', color: saved === l.code ? '#fff' : 'var(--text-main)', border: saved === l.code ? 'none' : '1px solid var(--surface-border)', borderRadius:8, cursor:'pointer', fontWeight: saved === l.code ? 700 : 500, fontSize:13 }}>
-                        {l.label} <span style={{ opacity:0.6, fontSize:11, marginLeft:4 }}>{l.fullName}</span>
-                      </motion.button>
-                    )
-                  })}
+                    { code:'en' as const, label:'EN', fullName:'English' },
+                    { code:'ms' as const, label:'MS', fullName:'Bahasa Malaysia' },
+                    { code:'zh' as const, label:'ZH', fullName:'中文' },
+                  ].map(l => (
+                    <motion.button key={l.code} whileTap={{ scale:0.95 }}
+                      onClick={() => setLocale(l.code)}
+                      style={{ padding:'8px 14px', background: locale === l.code ? 'var(--primary)' : 'var(--surface-2)', color: locale === l.code ? '#fff' : 'var(--text-main)', border: locale === l.code ? 'none' : '1px solid var(--surface-border)', borderRadius:8, cursor:'pointer', fontWeight: locale === l.code ? 700 : 500, fontSize:13 }}>
+                      {l.label} <span style={{ opacity:0.6, fontSize:11, marginLeft:4 }}>{l.fullName}</span>
+                    </motion.button>
+                  ))}
                 </div>
               </div>
             </motion.div>

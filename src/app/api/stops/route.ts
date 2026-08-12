@@ -36,11 +36,14 @@ export async function POST(request: NextRequest) {
         if (!data.routeId || !data.name || data.latitude === undefined || data.longitude === undefined || data.order === undefined) {
             return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
         }
+        if (!String(data.name).trim()) {
+            return NextResponse.json({ error: 'Stop name cannot be only spaces' }, { status: 400 })
+        }
 
         const stop = await prisma.stop.create({
             data: {
                 routeId: data.routeId,
-                name: data.name,
+                name: String(data.name).trim(),
                 latitude: data.latitude,
                 longitude: data.longitude,
                 order: data.order

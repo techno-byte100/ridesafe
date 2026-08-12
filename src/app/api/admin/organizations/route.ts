@@ -4,6 +4,22 @@ import { getUserFromSession } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
+const PHONE_RE = /^[+0-9\s()-]{7,20}$/
+
+function validateOrgFields(name: string | undefined, address: string | undefined, phone: string | undefined): string | null {
+  if (name !== undefined && (!name || name.trim().length < 2)) {
+    return 'Organization name must be at least 2 characters'
+  }
+  if (address !== undefined && address && !address.trim()) {
+    return 'Address cannot be only spaces'
+  }
+  if (phone !== undefined && phone) {
+    if (!phone.trim()) return 'Phone number cannot be only spaces'
+    if (!PHONE_RE.test(phone.trim())) return 'Enter a valid phone number'
+  }
+  return null
+}
+
 export async function GET() {
   try {
     const auth = await getUserFromSession()
@@ -30,8 +46,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const { name, address, phone } = await req.json()
-    if (!name || name.trim().length < 2) {
-      return NextResponse.json({ error: 'Organization name must be at least 2 characters' }, { status: 400 })
+    const validationError = validateOrgFields(name, address, phone)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
     }
     // Check for duplicate name
     const existing = await prisma.organization.findFirst({ where: { name: { equals: name.trim(), mode: 'insensitive' } } })
@@ -59,8 +76,9 @@ export async function PATCH(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 })
     }
-    if (name !== undefined && (!name || name.trim().length < 2)) {
-      return NextResponse.json({ error: 'Organization name must be at least 2 characters' }, { status: 400 })
+    const validationError = validateOrgFields(name, address, phone)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
     }
     const updates: Record<string, unknown> = {}
     if (name !== undefined) updates.name = name.trim()

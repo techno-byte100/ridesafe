@@ -11,7 +11,17 @@ interface Driver { id: string; name: string; role: string }
 
 const defaultForm = { driverId: '', date: '', startTime: '07:00', endTime: '09:00' }
 
+function mondayOf(d: Date) {
+  const date = new Date(d)
+  const day = date.getDay() // 0=Sun..6=Sat
+  const diff = day === 0 ? -6 : 1 - day // shift back to Monday
+  date.setDate(date.getDate() + diff)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
 export default function ScheduleTab() {
+  const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const [shifts, setShifts] = useState<Shift[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])
   const [loading, setLoading] = useState(true)
@@ -94,10 +104,20 @@ export default function ScheduleTab() {
           <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }} className="btn btn-primary" onClick={openAddModal}>+ Add Shift</motion.button>
         </div>
 
+        {/* Week navigation */}
+        <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', marginBottom:'1rem' }}>
+          <button className="btn" style={{ padding:'0.4rem 0.8rem', fontSize:'0.8rem', background:'rgba(255,255,255,0.06)' }} onClick={() => setWeekStart(w => { const d = new Date(w); d.setDate(d.getDate() - 7); return d })}>&larr; Prev Week</button>
+          <div style={{ fontSize:'0.85rem', fontWeight:600, minWidth:180, textAlign:'center' }}>
+            {weekStart.toLocaleDateString(undefined, { day:'numeric', month:'short' })} &ndash; {new Date(weekStart.getTime() + 6*86400000).toLocaleDateString(undefined, { day:'numeric', month:'short', year:'numeric' })}
+          </div>
+          <button className="btn" style={{ padding:'0.4rem 0.8rem', fontSize:'0.8rem', background:'rgba(255,255,255,0.06)' }} onClick={() => setWeekStart(w => { const d = new Date(w); d.setDate(d.getDate() + 7); return d })}>Next Week &rarr;</button>
+          <button className="btn" style={{ padding:'0.4rem 0.8rem', fontSize:'0.8rem', background:'rgba(255,255,255,0.06)' }} onClick={() => setWeekStart(mondayOf(new Date()))}>This Week</button>
+        </div>
+
         {/* Weekly grid header */}
         <div style={{ display:'grid', gridTemplateColumns:'120px repeat(7,1fr)', gap:4, marginBottom:8 }}>
           <div style={{ fontWeight:700, fontSize:'0.8rem', color:'var(--text-muted)', padding:'0.5rem' }}>Driver</div>
-          {days.map(d => <div key={d} style={{ fontWeight:700, fontSize:'0.75rem', color:'var(--text-muted)', textAlign:'center', padding:'0.5rem' }}>{d}</div>)}
+          {days.map((d, i) => <div key={d} style={{ fontWeight:700, fontSize:'0.75rem', color:'var(--text-muted)', textAlign:'center', padding:'0.5rem' }}>{d} <span style={{ opacity:0.6, fontWeight:400 }}>{new Date(weekStart.getTime() + i * 86400000).getDate()}</span></div>)}
         </div>
 
         {/* Driver rows */}
@@ -107,7 +127,8 @@ export default function ScheduleTab() {
             <div key={driver.id} style={{ display:'grid', gridTemplateColumns:'120px repeat(7,1fr)', gap:4, marginBottom:4 }}>
               <div style={{ fontSize:'0.82rem', fontWeight:600, padding:'0.5rem', borderRadius:8, background:'rgba(255,255,255,0.03)' }}>{driver.name}</div>
               {days.map((_, di) => {
-                const dayShift = driverShifts.find(s => new Date(s.date).getDay() === (di + 1) % 7)
+                const colDate = new Date(weekStart.getTime() + di * 86400000)
+                const dayShift = driverShifts.find(s => new Date(s.date).toDateString() === colDate.toDateString())
                 return (
                   <div key={di}
                     onClick={() => dayShift && openEditModal(dayShift)}

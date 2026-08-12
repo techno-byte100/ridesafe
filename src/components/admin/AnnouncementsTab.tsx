@@ -1,14 +1,29 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+interface Announcement {
+  id: string; title: string; body: string; targetRole: string; type: string
+  sentCount: number; createdAt: string
+}
 
 export default function AnnouncementsTab() {
   const [form, setForm] = useState({ title: '', body: '', targetRole: 'ALL', type: 'INFO' })
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ sent: number; targetRole: string } | null>(null)
   const [toast, setToast] = useState('')
+  const [past, setPast] = useState<Announcement[]>([])
+  const [loadingPast, setLoadingPast] = useState(true)
 
   const showToast = (m: string) => { setToast(m); setTimeout(() => setToast(''), 4000) }
+
+  const loadPast = () => {
+    fetch('/api/announcements').then(r => r.json()).then(d => {
+      setPast(d.announcements || []); setLoadingPast(false)
+    }).catch(() => setLoadingPast(false))
+  }
+
+  useEffect(() => { loadPast() }, [])
 
   const handleSend = async () => {
     if (!form.title.trim() || !form.body.trim()) { showToast('️ Title and message required'); return }
@@ -20,6 +35,7 @@ export default function AnnouncementsTab() {
         setResult(data)
         showToast(`Sent to ${data.sent} users!`)
         setForm({ title: '', body: '', targetRole: 'ALL', type: 'INFO' })
+        loadPast()
       } else showToast('' + data.error)
     } catch { showToast('Network error') }
     finally { setSending(false) }
@@ -94,6 +110,38 @@ export default function AnnouncementsTab() {
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ marginTop:'1.5rem', padding:'1rem', background:'rgba(16,185,129,0.06)', borderRadius:12, border:'1px solid var(--success)', textAlign:'center' }}>
             Successfully sent to <strong>{result.sent}</strong> {result.targetRole === 'ALL' ? 'users' : result.targetRole.toLowerCase() + 's'}
           </motion.div>
+        )}
+      </div>
+
+      {/* Past announcements */}
+      <div className="glass-panel" style={{ padding: '2rem', maxWidth: 700, marginTop: '1.5rem' }}>
+        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Past Announcements</h3>
+        {loadingPast ? (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 60, borderRadius: 10 }} />)}
+          </div>
+        ) : past.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            No announcements sent yet.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: '0.65rem' }}>
+            {past.map(a => {
+              const typeColor = a.type === 'EMERGENCY' ? '#EF4444' : a.type === 'WARNING' ? '#F59E0B' : '#3B82F6'
+              return (
+                <div key={a.id} style={{ padding: '0.9rem 1.1rem', background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--surface-border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ fontWeight: 600 }}>{a.title}</div>
+                    <span className="badge" style={{ background: `${typeColor}22`, color: typeColor, fontSize: '0.68rem', flexShrink: 0 }}>{a.type}</span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>{a.body}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 6 }}>
+                    Sent to {a.sentCount} {a.targetRole === 'ALL' ? 'users' : a.targetRole.toLowerCase() + 's'} · {new Date(a.createdAt).toLocaleString()}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </motion.div>

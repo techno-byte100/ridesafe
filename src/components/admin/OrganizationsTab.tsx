@@ -57,6 +57,13 @@ export default function OrganizationsTab() {
     if (!form.name.trim() || form.name.trim().length < 2) {
       showToast('Organisation name must be at least 2 characters', 'error'); return
     }
+    if (form.address && !form.address.trim()) {
+      showToast('Address cannot be only spaces', 'error'); return
+    }
+    if (form.phone) {
+      if (!form.phone.trim()) { showToast('Phone number cannot be only spaces', 'error'); return }
+      if (!/^[+0-9\s()-]{7,20}$/.test(form.phone.trim())) { showToast('Enter a valid phone number', 'error'); return }
+    }
     setSaving(true)
     try {
       let res: Response
@@ -258,8 +265,8 @@ export default function OrganizationsTab() {
               </div>
               <div className="input-group">
                 <label className="input-label">Phone Number</label>
-                <input type="tel" className="input-field" placeholder="+60 3-1234 5678" value={form.phone}
-                  onChange={e => setForm(p => ({...p, phone: e.target.value}))} />
+                <input type="tel" className="input-field" placeholder="+60 3-1234 5678" value={form.phone} maxLength={20}
+                  onChange={e => setForm(p => ({...p, phone: e.target.value.replace(/[^0-9+\s()\-]/g, '')}))} />
               </div>
 
               <div style={{ display:'flex', gap:'1rem', marginTop:'1.5rem' }}>

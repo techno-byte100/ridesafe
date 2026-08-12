@@ -32,9 +32,11 @@ const SELF_PICKUP_OPTIONS = [
   { value: 'AFTER_SCHOOL',  label: 'After School Activity' },
 ]
 
+const todayStr = new Date().toISOString().split('T')[0]
+
 const defaultForm = {
   parentName: '', parentEmail: '',
-  name: '', grade: '', level: 'Primary', dob: '',
+  name: '', grade: '', level: 'Primary', dob: '', preferredStartDate: '',
   parentContact1: '', parentContact2: '', selfPickupSession: '',
 }
 
@@ -162,6 +164,8 @@ function RegistrationForm() {
     if (!form.grade.trim()) errs.grade = 'Grade is required'
     if (!form.parentContact1.trim() || !/^[+0-9\s()-]{7,20}$/.test(form.parentContact1.trim())) errs.parentContact1 = 'Enter a valid phone number'
     if (form.parentContact2 && !/^[+0-9\s()-]{7,20}$/.test(form.parentContact2.trim())) errs.parentContact2 = 'Enter a valid phone number'
+    if (form.dob && form.dob > todayStr) errs.dob = 'Date of birth cannot be in the future'
+    if (form.preferredStartDate && form.preferredStartDate < todayStr) errs.preferredStartDate = 'Preferred start date cannot be in the past'
     return errs
   }
 
@@ -238,16 +242,22 @@ function RegistrationForm() {
         </div>
 
         <label style={labelStyle()}>Date of Birth</label>
-        <input type="date" style={fieldStyle(false)} value={form.dob} onChange={e => set('dob', e.target.value)} />
+        <input type="date" style={fieldStyle(!!errors.dob)} value={form.dob} max={todayStr} onChange={e => set('dob', e.target.value)} />
+        {errors.dob && <div style={{ color: HC.danger, fontSize: 12, marginBottom: 12 }}>{errors.dob}</div>}
         <div style={{ marginBottom: 14 }} />
 
+        <label style={labelStyle()}>Preferred Start Date</label>
+        <input type="date" style={fieldStyle(!!errors.preferredStartDate)} value={form.preferredStartDate} min={todayStr} onChange={e => set('preferredStartDate', e.target.value)} />
+        {errors.preferredStartDate && <div style={{ color: HC.danger, fontSize: 12, marginBottom: 12 }}>{errors.preferredStartDate}</div>}
+        <div style={{ color: HC.text3, fontSize: 12, marginTop: -2, marginBottom: 14 }}>When would you like transport to begin? Leave blank if unsure.</div>
+
         <label style={labelStyle()}>Parent/Guardian Contact *</label>
-        <input style={fieldStyle(!!errors.parentContact1)} value={form.parentContact1} onChange={e => set('parentContact1', e.target.value)} placeholder="+60 12-345 6789" />
+        <input type="tel" style={fieldStyle(!!errors.parentContact1)} value={form.parentContact1} maxLength={20} onChange={e => set('parentContact1', e.target.value.replace(/[^0-9+\s()-]/g, ''))} placeholder="+60 12-345 6789" />
         {errors.parentContact1 && <div style={{ color: HC.danger, fontSize: 12, marginBottom: 12 }}>{errors.parentContact1}</div>}
         <div style={{ marginBottom: 14 }} />
 
         <label style={labelStyle()}>Secondary Contact (optional)</label>
-        <input style={fieldStyle(!!errors.parentContact2)} value={form.parentContact2} onChange={e => set('parentContact2', e.target.value)} placeholder="+60 12-345 6789" />
+        <input type="tel" style={fieldStyle(!!errors.parentContact2)} value={form.parentContact2} maxLength={20} onChange={e => set('parentContact2', e.target.value.replace(/[^0-9+\s()-]/g, ''))} placeholder="+60 12-345 6789" />
         {errors.parentContact2 && <div style={{ color: HC.danger, fontSize: 12, marginBottom: 12 }}>{errors.parentContact2}</div>}
         <div style={{ marginBottom: 14 }} />
 

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, X } from 'lucide-react'
 
 const defaultBusForm = { plateNumber: '', capacity: '30', driverId: '', routeId: '', wialonUnitId: '', katsanaVehicleId: '' }
 const defaultRouteForm = { name: '', morningTime: '7:30 AM', afternoonTime: '3:00 PM' }
 
-export default function FleetTab() {
+export default function FleetTab({ searchQuery = '' }: { searchQuery?: string }) {
     const [buses, setBuses] = useState<any[]>([])
     const [routes, setRoutes] = useState<any[]>([])
     const [drivers, setDrivers] = useState<any[]>([])
@@ -49,7 +49,7 @@ export default function FleetTab() {
     }
 
     const handleAddStop = async () => {
-        if (!newStop.name || !selectedRouteId) return
+        if (!newStop.name.trim() || !selectedRouteId) return
         try {
             const res = await fetch('/api/stops', {
                 method: 'POST',
@@ -176,6 +176,10 @@ export default function FleetTab() {
         } catch (e) { console.error(e) } finally { setDeletingRouteId(null) }
     }
 
+    const q = searchQuery.trim().toLowerCase()
+    const filteredBuses = q ? buses.filter(b => b.plateNumber?.toLowerCase().includes(q) || b.driver?.name?.toLowerCase().includes(q)) : buses
+    const filteredRoutes = q ? routes.filter(r => r.name?.toLowerCase().includes(q)) : routes
+
     if (loading) return <div>Loading fleet...</div>
 
     return (
@@ -187,10 +191,10 @@ export default function FleetTab() {
                 </div>
 
                 <div style={{ display: 'grid', gap: '1rem' }}>
-                    {buses.map(b => (
+                    {filteredBuses.map((b, i) => (
                         <div key={b.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <strong>{b.plateNumber}</strong>
+                                <strong><span style={{ color: 'var(--text-muted)', fontWeight: 400, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{i + 1}.</span>{b.plateNumber}</strong>
                                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                     <span className="badge" style={{ background: 'rgba(255,255,255,0.1)' }}>{b.status}</span>
                                     <button onClick={() => openEditBusModal(b)} title="Edit bus"
@@ -218,10 +222,10 @@ export default function FleetTab() {
                 </div>
 
                 <div style={{ display: 'grid', gap: '1rem' }}>
-                    {routes.map(r => (
+                    {filteredRoutes.map((r, i) => (
                         <div key={r.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--surface-border)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <strong>{r.name}</strong>
+                                <strong><span style={{ color: 'var(--text-muted)', fontWeight: 400, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{i + 1}.</span>{r.name}</strong>
                                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                     <button onClick={() => openEditRouteModal(r)} title="Edit route"
                                         style={{ background: 'none', border: '1px solid var(--surface-border)', borderRadius: 8, padding: '4px 7px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
@@ -275,9 +279,14 @@ export default function FleetTab() {
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                         backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
                         display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-                    }}>
+                    }} onClick={e => { if (e.target === e.currentTarget) { setShowBusModal(false); setEditingBusId(null) } }}>
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="glass-panel" style={{ padding: '2rem', width: '90%', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: 'var(--bus-yellow)' }}>{editingBusId ? 'Edit Bus' : 'Add New Bus'}</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h3 style={{ margin: 0, color: 'var(--bus-yellow)' }}>{editingBusId ? 'Edit Bus' : 'Add New Bus'}</h3>
+                                <button type="button" onClick={() => { setShowBusModal(false); setEditingBusId(null) }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
                             <form onSubmit={handleAddBus} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div className="input-group" style={{ marginBottom: 0 }}>
                                     <label className="input-label">Plate Number</label>
@@ -342,9 +351,14 @@ export default function FleetTab() {
                         position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                         backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
                         display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-                    }}>
+                    }} onClick={e => { if (e.target === e.currentTarget) { setShowRouteModal(false); setEditingRouteId(null) } }}>
                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="glass-panel" style={{ padding: '2rem', width: '90%', maxWidth: '500px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <h3 style={{ marginTop: 0, marginBottom: '1.5rem', color: 'var(--bus-yellow)' }}>{editingRouteId ? 'Edit Route' : 'Add New Route'}</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                <h3 style={{ margin: 0, color: 'var(--bus-yellow)' }}>{editingRouteId ? 'Edit Route' : 'Add New Route'}</h3>
+                                <button type="button" onClick={() => { setShowRouteModal(false); setEditingRouteId(null) }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
                             <form onSubmit={handleAddRoute} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div className="input-group" style={{ marginBottom: 0 }}>
                                     <label className="input-label">Route Name</label>

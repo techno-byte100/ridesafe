@@ -14,6 +14,7 @@ interface RegistrationInput {
   studentGrade: string
   studentLevel?: string | null
   dob?: string | null
+  preferredStartDate?: string | null
   selfPickupSession?: string | null
   origin: string // request origin, e.g. https://ridesafe.com.my
 }
@@ -36,6 +37,7 @@ export class RegistrationService {
         studentGrade: input.studentGrade.trim(),
         studentLevel: input.studentLevel?.trim() || 'Primary',
         dob: input.dob ? new Date(input.dob) : null,
+        preferredStartDate: input.preferredStartDate ? new Date(input.preferredStartDate) : null,
         selfPickupSession: input.selfPickupSession || null,
         amount,
         status: 'PENDING',
@@ -99,6 +101,7 @@ export class RegistrationService {
         grade: pending.studentGrade,
         level: pending.studentLevel,
         dob: pending.dob,
+        preferredStartDate: pending.preferredStartDate,
         parentContact1: pending.parentContact1,
         parentContact2: pending.parentContact2,
         isSelfPickup: !!pending.selfPickupSession,

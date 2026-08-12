@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { title, description, startDate, endDate, type, isPublic, color } = body
 
-    if (!title || !startDate) {
+    if (!title || !String(title).trim() || !startDate) {
       return NextResponse.json({ error: 'Title and Start Date are required' }, { status: 400 })
     }
 
     const event = await prisma.academicEvent.create({
       data: {
-        title,
-        description,
+        title: String(title).trim(),
+        description: description && String(description).trim() ? String(description).trim() : null,
         startDate: new Date(startDate),
         endDate: endDate ? new Date(endDate) : null,
         type: type || 'EVENT',

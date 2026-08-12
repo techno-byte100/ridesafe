@@ -544,6 +544,9 @@ export default function DriverDashboard() {
                <button onClick={() => { playHorn(); setAppUnlocked(true); }} className="btn btn-primary" style={{ width: '100%' }}>
                  Initialize Audio Context
                </button>
+               <button onClick={() => setAppUnlocked(true)} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:'0.85rem', marginTop:'1rem', cursor:'pointer', textDecoration:'underline' }}>
+                 Skip — I&apos;ll turn on audio alerts later
+               </button>
             </div>
           </motion.div>
         )}

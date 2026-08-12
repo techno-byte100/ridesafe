@@ -28,14 +28,10 @@ export default function MaintenanceTab() {
   const reload = () => {
     Promise.all([
       fetch('/api/maintenance').then(r => r.json()),
-      fetch('/api/admin/routes').then(r => r.json()),
-    ]).then(([m]) => {
+      fetch('/api/admin/buses').then(r => r.json()),
+    ]).then(([m, b]) => {
       setLogs(m.logs || [])
-      // Extract buses from fleet
-      fetch('/api/admin/routes').then(r => r.json()).then(d => {
-        const allBuses = (d.routes || []).flatMap((route: { buses?: Bus[] }) => route.buses || [])
-        setBuses(allBuses)
-      })
+      setBuses(b.buses || [])
       setLoading(false)
     })
   }

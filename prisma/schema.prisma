@@ -65,6 +65,7 @@ model Student {
   grade             String
   level             String
   dob               DateTime?
+  preferredStartDate DateTime?
   age               Int?
   photoUrl          String?
   parentContact1    String
@@ -207,6 +208,17 @@ model Notification {
   user User @relation(fields: [userId], references: [id])
 }
 
+model Announcement {
+  id         String   @id @default(cuid())
+  title      String
+  body       String
+  targetRole String   @default("ALL")
+  type       String   @default("INFO")
+  sentCount  Int      @default(0)
+  createdBy  String?
+  createdAt  DateTime @default(now())
+}
+
 model Message {
   id          String   @id @default(cuid())
   senderId    String
@@ -307,6 +319,7 @@ model PendingRegistration {
   studentGrade      String
   studentLevel      String    @default("Primary")
   dob               DateTime?
+  preferredStartDate DateTime?
   selfPickupSession String?
   amount            Float
   billId            String?   @unique

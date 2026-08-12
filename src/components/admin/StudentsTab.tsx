@@ -42,7 +42,7 @@ function validateStudentForm(form: typeof defaultForm): Record<string, string> {
   return errs
 }
 
-export default function StudentsTab() {
+export default function StudentsTab({ searchQuery = '' }: { searchQuery?: string }) {
   const [students, setStudents] = useState<Student[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
@@ -142,8 +142,8 @@ export default function StudentsTab() {
 
   const exportCSV = () => {
     const rows = [
-      ['Name', 'Grade', 'Level', 'Contact1', 'Status', 'Route'],
-      ...students.map(s => [s.name, s.grade, s.level, s.parentContact1, s.status, s.route?.name || ''])
+      ['#', 'Name', 'Grade', 'Level', 'Contact1', 'Status', 'Route'],
+      ...students.map((s, i) => [i + 1, s.name, s.grade, s.level, s.parentContact1, s.status, s.route?.name || ''])
     ]
     const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -178,7 +178,17 @@ export default function StudentsTab() {
     showToast('PDF exported!', 'success')
   }
 
-  const filtered = students
+  const q = searchQuery.trim().toLowerCase()
+  const filtered = q
+    ? students.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.grade.toLowerCase().includes(q) ||
+        s.level?.toLowerCase().includes(q) ||
+        s.route?.name.toLowerCase().includes(q) ||
+        s.parent?.name.toLowerCase().includes(q) ||
+        s.parentContact1?.includes(q)
+      )
+    : students
 
   if (loading) return (
     <div className="glass-panel" style={{ padding: '2rem' }}>
@@ -229,13 +239,16 @@ export default function StudentsTab() {
 
         {/* Students list */}
         <div style={{ display:'grid', gap:'0.75rem' }}>
-          {filtered.map(s => (
+          {filtered.map((s, i) => (
             <motion.div key={s.id} initial={{ opacity:0, x:-10 }} animate={{ opacity:1, x:0 }}
               whileHover={{ scale:1.005, backgroundColor:'rgba(255,255,255,0.04)' }}
               style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
                 padding:'1rem 1.25rem', background:'rgba(255,255,255,0.02)',
                 borderRadius:12, border:'1px solid var(--surface-border)', transition:'all 0.2s' }}>
               <div style={{ display:'flex', alignItems:'center', gap:'1rem' }}>
+                <div style={{ width:22, fontSize:'0.78rem', color:'var(--text-muted)', textAlign:'right', flexShrink:0, fontVariantNumeric:'tabular-nums' }}>
+                  {i + 1}
+                </div>
                 <div style={{ width:40, height:40, borderRadius:'50%',
                   background:'linear-gradient(135deg,#FFD100,#F5A623)',
                   display:'flex', alignItems:'center', justifyContent:'center',
@@ -277,7 +290,7 @@ export default function StudentsTab() {
           ))}
           {filtered.length === 0 && (
             <div style={{ textAlign:'center', padding:'3rem', color:'var(--text-muted)' }}>
-              No students registered yet. Click "Add Student" to get started.
+              {q ? `No students match "${searchQuery}".` : 'No students registered yet. Click "Add Student" to get started.'}
             </div>
           )}
         </div>

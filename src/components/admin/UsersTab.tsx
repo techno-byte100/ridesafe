@@ -31,10 +31,24 @@ function validateForm(form: typeof defaultForm, isEdit = false): Record<string, 
   return errs
 }
 
-export default function UsersTab({ superAdminView = false }: { superAdminView?: boolean }) {
+// Hoisted to module scope — defining this inside UsersTab's render body would give it a new
+// function identity every render, making React treat it as a different component type and
+// remount (and lose focus on) every wrapped input on each keystroke.
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div className="input-group" style={{ marginBottom: 0 }}>
+      <label className="input-label">{label}</label>
+      {children}
+      {error && <div style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={12} />{error}</div>}
+    </div>
+  )
+}
+
+export default function UsersTab({ superAdminView = false, searchQuery = '' }: { superAdminView?: boolean; searchQuery?: string }) {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [filterRole, setFilterRole] = useState('ALL')
+  const [filterOrg, setFilterOrg] = useState('ALL')
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(defaultForm)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -154,16 +168,11 @@ export default function UsersTab({ superAdminView = false }: { superAdminView?: 
     finally { setInvoicingId(null) }
   }
 
+  const q = searchQuery.trim().toLowerCase()
   const filtered = users.filter(u =>
-    filterRole === 'ALL' || u.role === filterRole
-  )
-
-  const Field = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
-    <div className="input-group" style={{ marginBottom: 0 }}>
-      <label className="input-label">{label}</label>
-      {children}
-      {error && <div style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}><AlertCircle size={12} />{error}</div>}
-    </div>
+    (filterRole === 'ALL' || u.role === filterRole) &&
+    (filterOrg === 'ALL' || u.organizationId === filterOrg) &&
+    (!q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q))
   )
 
   if (loading) return (
@@ -197,12 +206,19 @@ export default function UsersTab({ superAdminView = false }: { superAdminView?: 
           </motion.button>
         </div>
 
-        {/* Role filter */}
-        <div style={{ marginBottom: '1.25rem' }}>
+        {/* Role / organisation filters */}
+        <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <select className="select-field" value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ width: 'auto', minWidth: 160 }}>
             <option value="ALL">All Roles</option>
             {['ADMIN', 'DRIVER', 'PARENT', 'SCHOOL_ADMIN'].map(r => <option key={r} value={r}>{r}</option>)}
           </select>
+          {superAdminView && orgs.length > 0 && (
+            <select className="select-field" value={filterOrg} onChange={e => setFilterOrg(e.target.value)} style={{ width: 'auto', minWidth: 180 }}>
+              <option value="ALL">All Organisations</option>
+              <option value="">No organisation (global)</option>
+              {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+          )}
         </div>
 
         {/* Role stats */}
@@ -261,7 +277,7 @@ export default function UsersTab({ superAdminView = false }: { superAdminView?: 
               </div>
             </motion.div>
           ))}
-          {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No users found.</div>}
+          {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>{q ? `No users match "${searchQuery}".` : 'No users found.'}</div>}
         </div>
       </div>
 

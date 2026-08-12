@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 
 import en from '@/i18n/en.json'
 import ms from '@/i18n/ms.json'
@@ -22,6 +22,11 @@ const I18nContext = createContext<I18nContextType>({
 })
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  // Pre-login default: a local cache with no account tied to it yet, so the
+  // login page itself isn't stuck on English. Once a session exists, the
+  // account's own saved locale (below) is the source of truth — this
+  // prevents one shared browser-wide key from leaking a language change
+  // from one logged-in role into a completely different account/session.
   const [locale, setLocaleState] = useState<Locale>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('ridesafe-locale') as Locale) || 'en'
@@ -29,9 +34,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return 'en'
   })
 
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d?.user?.locale && translationMap[d.user.locale as Locale]) {
+        setLocaleState(d.user.locale as Locale)
+      }
+    }).catch(() => {})
+  }, [])
+
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l)
     if (typeof window !== 'undefined') localStorage.setItem('ridesafe-locale', l)
+    // Persist to the logged-in account so it doesn't ride along with the
+    // browser into a different role/session. No-ops (401) when logged out.
+    fetch('/api/auth/me', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locale: l }),
+    }).catch(() => {})
   }, [])
 
   const t = useCallback((key: string): string => {

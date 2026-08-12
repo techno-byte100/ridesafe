@@ -54,9 +54,9 @@ export default function AcademicCalendarTab() {
   }, [])
 
   const handleSave = async () => {
-    if (!form.title || !form.startDate) { 
+    if (!form.title.trim() || !form.startDate) {
       showToast('Title and Start Date are required', 'error')
-      return 
+      return
     }
 
     const method = editingId ? 'PATCH' : 'POST'
@@ -230,6 +230,9 @@ export default function AcademicCalendarTab() {
                   <div className="input-group">
                     <label className="input-label">Start Date *</label>
                     <input className="input-field" type="date" value={form.startDate} onChange={e => setForm(p => ({...p, startDate: e.target.value}))} />
+                    {form.startDate && form.startDate < new Date().toISOString().split('T')[0] && (
+                      <div style={{ fontSize:'0.72rem', color:'var(--warning)', marginTop:4 }}>This date is in the past — use this to log a historical event.</div>
+                    )}
                   </div>
                   <div className="input-group">
                     <label className="input-label">End Date (Optional)</label>

@@ -109,6 +109,7 @@ function SidebarItem({ icon: Icon, label, active, onClick }: {
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab]             = useState('OVERVIEW')
+  const [searchQuery, setSearchQuery]         = useState('')
   const [currentUserRole, setCurrentUserRole] = useState<string>('')
   const [userName, setUserName]               = useState<string>('')
   const [loading, setLoading]                 = useState(true)
@@ -160,6 +161,7 @@ export default function AdminDashboard() {
 
   const handleNavClick = (id: string) => {
     setActiveTab(id)
+    setSearchQuery('')
     if (isMobile) setSidebarOpen(false)
   }
 
@@ -312,21 +314,35 @@ export default function AdminDashboard() {
             </h2>
           </div>
 
-          {/* Search — desktop only */}
-          {!isMobile && (
-            <div style={{
-              marginLeft: 'auto',
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '9px 14px',
-              background: HC.surface, border: `1px solid ${HC.line}`,
-              borderRadius: HC.pill, width: 220,
-            }}>
-              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={HC.text3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-              </svg>
-              <span style={{ fontSize: 13, color: HC.text3 }}>{t('common.search')}</span>
-            </div>
-          )}
+          {/* Search — desktop only. Live-filters the list on the tabs that support it
+              (Students, Users, Fleet & Routes); shows as a plain (disabled) box elsewhere
+              so it never looks functional where it isn't wired yet. */}
+          {!isMobile && (() => {
+            const searchable = ['STUDENTS', 'USERS', 'SUPERUSERS', 'FLEET'].includes(activeTab)
+            return (
+              <div style={{
+                marginLeft: 'auto',
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '9px 14px',
+                background: HC.surface, border: `1px solid ${HC.line}`,
+                borderRadius: HC.pill, width: 220,
+              }}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={HC.text3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                </svg>
+                {searchable ? (
+                  <input
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder={t('common.search')}
+                    style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 13, color: HC.text, fontFamily: 'inherit' }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 13, color: HC.text3 }}>{t('common.search')}</span>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Actions */}
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: isMobile ? 'auto' : 0 }}>
@@ -364,10 +380,10 @@ export default function AdminDashboard() {
             >
               {activeTab === 'OVERVIEW'      && <OverviewTab currentUserRole={currentUserRole} />}
               {activeTab === 'ANALYTICS'     && <AnalyticsTab />}
-              {activeTab === 'USERS'         && <UsersTab />}
-              {activeTab === 'STUDENTS'      && <StudentsTab />}
+              {activeTab === 'USERS'         && <UsersTab searchQuery={searchQuery} />}
+              {activeTab === 'STUDENTS'      && <StudentsTab searchQuery={searchQuery} />}
               {activeTab === 'ATTENDANCE'    && <AttendanceTab />}
-              {activeTab === 'FLEET'         && <FleetTab />}
+              {activeTab === 'FLEET'         && <FleetTab searchQuery={searchQuery} />}
               {activeTab === 'LIVETRIPS'     && <LiveTripsTab />}
               {activeTab === 'HISTORY'       && <TripHistoryTab />}
               {activeTab === 'SCHEDULE'      && <ScheduleTab />}
@@ -378,7 +394,7 @@ export default function AdminDashboard() {
               {activeTab === 'MESSAGES'       && <MessagesTab />}
               {activeTab === 'CALENDAR'       && <AcademicCalendarTab />}
               {activeTab === 'ORGANIZATIONS'  && <OrganizationsTab />}
-              {activeTab === 'SUPERUSERS'     && <UsersTab superAdminView />}
+              {activeTab === 'SUPERUSERS'     && <UsersTab superAdminView searchQuery={searchQuery} />}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -25,11 +25,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     const body = await request.json()
     const { title, description, startDate, endDate, type, isPublic, color } = body
 
+    if (title !== undefined && !String(title).trim()) {
+      return NextResponse.json({ error: 'Title cannot be only spaces' }, { status: 400 })
+    }
+
     const updatedEvent = await prisma.academicEvent.update({
       where: { id },
       data: {
-        title,
-        description,
+        title: title !== undefined ? String(title).trim() : undefined,
+        description: description !== undefined ? (description && String(description).trim() ? String(description).trim() : null) : undefined,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : endDate === null ? null : undefined,
         type,
