@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/i18n/provider'
 import { Building2, Plus, Users2, GraduationCap, Bus, Route, X, CheckCircle, AlertCircle, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 
 interface Org {
@@ -16,6 +17,7 @@ interface Org {
 const defaultForm = { name: '', address: '', phone: '' }
 
 export default function OrganizationsTab() {
+  const { t } = useTranslation()
   const [orgs, setOrgs] = useState<Org[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

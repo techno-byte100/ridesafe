@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { RefreshCw, Bus, MapPin, Navigation, Clock, AlertTriangle, Satellite, Radio, Smartphone } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 // Leaflet must be dynamically imported — it uses browser-only APIs
 const BusMap = dynamic(() => import('@/components/shared/BusMap'), {
@@ -65,6 +66,7 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default function LiveTripsTab() {
+  const { t } = useTranslation()
   const [trips, setTrips] = useState<LiveTrip[]>([])
   const [drivers, setDrivers] = useState<DriverLocation[]>([])
   const [wialonStatus, setWialonStatus] = useState<GpsStatus | null>(null)

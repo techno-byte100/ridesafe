@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/i18n/provider'
 import { CheckCircle, AlertTriangle, MessageSquarePlus, Mails, Send, X } from 'lucide-react'
 
 interface Message {
@@ -31,6 +32,7 @@ const ROLE_BG: Record<string, string> = {
 const MAX_CHARS = 1000
 
 export default function MessagesTab() {
+  const { t } = useTranslation()
   const [messages, setMessages] = useState<Message[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)

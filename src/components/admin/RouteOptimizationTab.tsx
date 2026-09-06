@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/i18n/provider'
 
 interface Stop { id: string; name: string; latitude: number; longitude: number; order: number }
 interface Route { id: string; name: string; stops: Stop[] }
@@ -39,6 +40,7 @@ function optimizeRoute(stops: Stop[]): Stop[] {
 }
 
 export default function RouteOptimizationTab() {
+  const { t } = useTranslation()
   const [routes, setRoutes] = useState<Route[]>([])
   const [selectedRouteId, setSelectedRouteId] = useState('')
   const [loading, setLoading] = useState(true)

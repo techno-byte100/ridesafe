@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CalendarDays, CalendarPlus, CheckCircle, AlertTriangle, Pencil, Trash2 } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface Shift {
   id: string; driverId: string; date: string; startTime: string; endTime: string; status: string
@@ -21,6 +22,7 @@ function mondayOf(d: Date) {
 }
 
 export default function ScheduleTab() {
+  const { t } = useTranslation()
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()))
   const [shifts, setShifts] = useState<Shift[]>([])
   const [drivers, setDrivers] = useState<Driver[]>([])

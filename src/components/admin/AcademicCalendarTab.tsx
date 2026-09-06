@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/i18n/provider'
 import { Calendar, CalendarPlus, CheckCircle, AlertTriangle, Trash2, Edit2, Globe, Lock } from 'lucide-react'
 
 interface AcademicEvent {
@@ -15,6 +16,7 @@ interface AcademicEvent {
 }
 
 export default function AcademicCalendarTab() {
+  const { t } = useTranslation()
   const [events, setEvents] = useState<AcademicEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)

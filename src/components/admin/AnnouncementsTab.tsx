@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from '@/i18n/provider'
 
 interface Announcement {
   id: string; title: string; body: string; targetRole: string; type: string
@@ -8,6 +9,7 @@ interface Announcement {
 }
 
 export default function AnnouncementsTab() {
+  const { t } = useTranslation()
   const [form, setForm] = useState({ title: '', body: '', targetRole: 'ALL', type: 'INFO' })
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ sent: number; targetRole: string } | null>(null)
@@ -42,9 +44,9 @@ export default function AnnouncementsTab() {
   }
 
   const roles = [
-    { value: 'ALL', label: 'All Users' },
+    { value: 'ALL', label: t('announcements.allUsers') },
     { value: 'PARENT', label: '‍‍Parents Only' },
-    { value: 'DRIVER', label: 'Drivers Only' },
+    { value: 'DRIVER', label: t('announcements.driversOnly') },
     { value: 'ADMIN', label: '️ Admins Only' },
   ]
   const types = [
@@ -58,7 +60,7 @@ export default function AnnouncementsTab() {
       <AnimatePresence>{toast && <motion.div initial={{ opacity:0,y:-20 }} animate={{ opacity:1,y:0 }} exit={{ opacity:0 }} style={{ position:'fixed',top:20,right:20,zIndex:9999,padding:'0.875rem 1.5rem',background:'rgba(16,185,129,0.15)',border:'1px solid var(--success)',borderRadius:12,color:'var(--text-main)',fontWeight:500,backdropFilter:'blur(12px)' }}>{toast}</motion.div>}</AnimatePresence>
 
       <div className="glass-panel" style={{ padding: '2rem', maxWidth: 700 }}>
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem' }}>Broadcast Announcement</h3>
+        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem' }}>{t('announcements.title')}</h3>
 
         <div style={{ display: 'grid', gap: '1.25rem' }}>
           {/* Title */}
@@ -115,7 +117,7 @@ export default function AnnouncementsTab() {
 
       {/* Past announcements */}
       <div className="glass-panel" style={{ padding: '2rem', maxWidth: 700, marginTop: '1.5rem' }}>
-        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>Past Announcements</h3>
+        <h3 style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }}>{t('announcements.pastAnnouncements')}</h3>
         {loadingPast ? (
           <div style={{ display: 'grid', gap: 10 }}>
             {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: 60, borderRadius: 10 }} />)}

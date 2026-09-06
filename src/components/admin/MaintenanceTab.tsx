@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wrench, CircleDashed, ShieldAlert, Search, Settings } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface MaintenanceLog {
   id: string; busId: string; type: string; description: string; scheduledDate: string
@@ -16,6 +17,7 @@ const TYPE_ICON: Record<string, React.ReactNode> = { OIL_CHANGE: <Wrench size={1
 interface Bus { id: string; plateNumber: string }
 
 export default function MaintenanceTab() {
+  const { t } = useTranslation()
   const [logs, setLogs] = useState<MaintenanceLog[]>([])
   const [buses, setBuses] = useState<Bus[]>([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +69,7 @@ export default function MaintenanceTab() {
       <div className="glass-panel" style={{ padding: '2rem' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' }}>
           <div>
-            <h3 style={{ margin:0, fontSize:'1.3rem' }}>Fleet Maintenance</h3>
+            <h3 style={{ margin:0, fontSize:'1.3rem' }}>{t('maintenance.title')}</h3>
             <div style={{ fontSize:'0.85rem', color:'var(--text-muted)', marginTop:4 }}>{logs.length} records</div>
           </div>
           <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }} className="btn btn-primary" onClick={() => setShowModal(true)}>+ Log Maintenance</motion.button>
@@ -109,7 +111,7 @@ export default function MaintenanceTab() {
         {showModal && (
           <motion.div className="modal-overlay" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
             <motion.div className="modal-box" initial={{ scale:0.9 }} animate={{ scale:1 }} exit={{ scale:0.9 }}>
-              <h3 style={{ marginBottom:'1.5rem' }}>Log Maintenance</h3>
+              <h3 style={{ marginBottom:'1.5rem' }}>{t('maintenance.logMaintenance')}</h3>
               <div style={{ display:'grid', gap:'1rem' }}>
                 <select className="select-field" value={form.busId} onChange={e => setForm(p => ({...p, busId: e.target.value}))}>
                   <option value="">Select Bus</option>

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from '@/i18n/provider'
 
 interface TripRecord {
   id: string; date: string; status: string; routeName: string; driverName: string
@@ -8,6 +9,7 @@ interface TripRecord {
 }
 
 export default function TripHistoryTab() {
+  const { t } = useTranslation()
   const [trips, setTrips] = useState<TripRecord[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -27,7 +29,7 @@ export default function TripHistoryTab() {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="glass-panel" style={{ padding: '2rem' }}>
-        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem' }}>Trip History</h3>
+        <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem' }}>{t('trips.title')}</h3>
 
         {loading ? (
           [1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:60, marginBottom:10, borderRadius:10 }} />)

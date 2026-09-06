@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, CheckCircle, FolderClosed, Sparkles } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface LostItem {
   id: string; description: string; status: string; photoUrl?: string; createdAt: string
@@ -12,6 +13,7 @@ const STATUS_COLOR: Record<string, string> = { OPEN: '#F59E0B', FOUND: '#10B981'
 const STATUS_ICON: Record<string, React.ReactNode> = { OPEN: <Search size={18}/>, FOUND: <CheckCircle size={18}/>, CLOSED: <FolderClosed size={18}/> }
 
 export default function LostFoundTab() {
+  const { t } = useTranslation()
   const [items, setItems] = useState<LostItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -43,7 +45,7 @@ export default function LostFoundTab() {
       <div className="glass-panel" style={{ padding:'2rem' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' }}>
           <div>
-            <h3 style={{ margin:0, fontSize:'1.3rem' }}>Lost & Found</h3>
+            <h3 style={{ margin:0, fontSize:'1.3rem' }}>{t('lostFound.title')}</h3>
             <div style={{ fontSize:'0.85rem', color:'var(--text-muted)', marginTop:4 }}>{items.filter(i => i.status === 'OPEN').length} open reports</div>
           </div>
           <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }} className="btn btn-primary" onClick={() => setShowModal(true)}>+ Report Item</motion.button>
@@ -87,7 +89,7 @@ export default function LostFoundTab() {
         {showModal && (
           <motion.div className="modal-overlay" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
             <motion.div className="modal-box" initial={{ scale:0.9 }} animate={{ scale:1 }} exit={{ scale:0.9 }}>
-              <h3 style={{ marginBottom:'1.5rem' }}>Report Lost Item</h3>
+              <h3 style={{ marginBottom:'1.5rem' }}>{t('lostFound.reportItem')}</h3>
               <textarea className="input-field" rows={4} placeholder="Describe the lost item (e.g., blue water bottle, left on Bus WKA1234)..." value={description} onChange={e => setDescription(e.target.value)} style={{ resize:'vertical', minHeight:100 }} />
               <div style={{ display:'flex', gap:'1rem', marginTop:'1.5rem' }}>
                 <button className="btn" style={{ flex:1, background:'rgba(255,255,255,0.06)' }} onClick={() => setShowModal(false)}>Cancel</button>

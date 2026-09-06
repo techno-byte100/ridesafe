@@ -1,7 +1,6 @@
-/* Parent Mobile Theme Overrides (Dark Premium Theme) */
+/* Parent Theme — Responsive (Mobile-first, Desktop-adaptive) */
 .mobile-wrapper {
     background-color: #0f172a;
-    /* dark slate background for desktop view */
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -13,9 +12,7 @@
     --primary: #FFD100;
     --primary-hover: #F5A623;
     --bg-color: #111827;
-    /* Dark navy/slate */
     --surface: #1E293B;
-    /* Surface slate */
     --surface-border: rgba(255, 255, 255, 0.08);
     --text-main: #F8FAFC;
     --text-muted: #94A3B8;
@@ -27,12 +24,86 @@
     color: var(--text-main);
     min-height: 100vh;
     width: 100%;
-    max-width: 480px;
-    /* Constrain for web to look like a phone */
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
     position: relative;
     font-family: 'Roboto', -apple-system, sans-serif;
     overflow-x: hidden;
+}
+
+/* Mobile: constrain to phone width */
+@media (max-width: 767px) {
+    .mobile-theme {
+        max-width: 480px;
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Desktop: full-width adaptive layout */
+@media (min-width: 768px) {
+    .mobile-wrapper {
+        background-color: var(--bg-color, #111827);
+    }
+
+    .mobile-theme {
+        max-width: 100%;
+        box-shadow: none;
+    }
+
+    .mobile-theme .mobile-header {
+        border-radius: 0 0 24px 24px;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .mobile-theme .mobile-nav {
+        max-width: 100%;
+        justify-content: center;
+        gap: 3rem;
+        padding: 12px 2rem;
+        border-radius: 16px 16px 0 0;
+        max-width: 800px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .mobile-theme .nav-item {
+        flex-direction: row;
+        gap: 8px;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .mobile-theme .nav-item:hover {
+        background: rgba(255, 209, 0, 0.08);
+    }
+
+    .mobile-theme .nav-item.active {
+        background: rgba(255, 209, 0, 0.12);
+    }
+
+    /* Desktop content area */
+    .mobile-theme > div:not(.mobile-header):not(.mobile-nav) {
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+
+    /* Desktop card grid */
+    .mobile-theme .mobile-card {
+        border-radius: 20px;
+        padding: 24px;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1200px) {
+    .mobile-theme .mobile-header {
+        padding: 40px 48px 52px 48px;
+    }
 }
 
 .mobile-theme .mobile-card {
