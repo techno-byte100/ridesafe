@@ -215,7 +215,7 @@ export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }
             <option value="ALL">All Roles</option>
             {['ADMIN', 'DRIVER', 'PARENT', 'SCHOOL_ADMIN'].map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          {superAdminView && orgs.length > 0 && (
+          {currentUserRole === 'SUPER_ADMIN' && orgs.length > 0 && (
             <select className="select-field" value={filterOrg} onChange={e => setFilterOrg(e.target.value)} style={{ width: 'auto', minWidth: 180 }}>
               <option value="ALL">All Organisations</option>
               <option value="">No organisation (global)</option>
@@ -310,7 +310,7 @@ export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }
                     <option value="PARENT">Parent</option>
                     <option value="ADMIN">Admin</option>
                     <option value="SCHOOL_ADMIN">School Admin</option>
-                    {superAdminView && <option value="SUPER_ADMIN">Super Admin</option>}
+                    {currentUserRole === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
                   </select>
                 </Field>
 
