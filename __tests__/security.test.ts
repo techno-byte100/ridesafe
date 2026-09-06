@@ -17,7 +17,7 @@ import {
   messageSchema,
   handshakeSchema,
   validateBody,
-} from '@/lib/validation'
+} from '@/lib/core/validation'
 
 describe('Zod Validation Schemas', () => {
 

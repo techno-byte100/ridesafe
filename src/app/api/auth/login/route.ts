@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import prisma from '@/lib/db/prisma'
 import bcrypt from 'bcryptjs'
-import { signToken } from '@/lib/auth'
+import { signToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
-import { loginSchema, validateBody } from '@/lib/validation'
+import { loginSchema, validateBody } from '@/lib/core/validation'
 
 export const dynamic = 'force-dynamic'
 

@@ -14,6 +14,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "migrate:postgres": "node scripts/migrate-postgres.mjs",
     "migrate:postgres:seed": "node scripts/migrate-postgres.mjs --seed",
+    "test": "jest",
     "deploy": "node execute_deploy.mjs"
   },
   "dependencies": {
@@ -55,5 +56,10 @@
     "ts-jest": "^29.4.9",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "prisma@5.22.0": true,
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true
   }
 }

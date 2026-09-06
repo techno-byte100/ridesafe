@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromSession } from '@/lib/auth'
+import { getUserFromSession } from '@/lib/auth/auth'
 
 export const dynamic = 'force-dynamic'
 

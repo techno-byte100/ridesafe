@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { RefreshCw, Bus, MapPin, Navigation, Clock, AlertTriangle, Satellite, Radio, Smartphone } from 'lucide-react'
 
 // Leaflet must be dynamically imported — it uses browser-only APIs
-const BusMap = dynamic(() => import('@/components/BusMap'), {
+const BusMap = dynamic(() => import('@/components/shared/BusMap'), {
   ssr: false,
   loading: () => (
     <div style={{ height: 340, borderRadius: 12, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', gap: '0.75rem', border: '1px solid var(--surface-border)' }}>

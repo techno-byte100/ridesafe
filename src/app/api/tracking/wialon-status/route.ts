@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getUserFromSession } from '@/lib/auth'
-import { getWialonAdapter } from '@/lib/wialon'
+import { getUserFromSession } from '@/lib/auth/auth'
+import { getWialonAdapter } from '@/lib/core/wialon'
 
 export const dynamic = 'force-dynamic'
 

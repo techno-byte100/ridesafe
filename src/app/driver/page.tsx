@@ -7,13 +7,14 @@ import Image from 'next/image'
 import { Bus, ScanFace, Navigation, Timer, GraduationCap, MapPin, AlertTriangle, Info, ShieldAlert, CheckCircle } from 'lucide-react'
 
 import { useAudio } from '@/hooks/useAudio'
-import CameraCapture from '@/components/CameraCapture'
+import CameraCapture from '@/components/driver/CameraCapture'
+import { useTranslation, LanguageSwitcher } from '@/i18n/provider'
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 interface ShiftRecord { id: string; date: string; startTime: string; endTime: string; status: string }
 interface TripRecord { id: string; routeName: string; date: string; pickedUp: number; droppedOff: number; absent: number; avgRating?: string | null }
 interface StopStudent { id: string; name: string; grade: string; type: 'PICKUP' | 'DROPOFF' }
-interface AttendanceRecord { studentId: string; action: string; temp?: boolean }
+interface AttendanceRecord { studentId: string; action: string; temp?: boolean; parentConfirmedPickup?: boolean; parentConfirmedDropoff?: boolean }
 interface Stop { id: string; name: string; pickupStudents: StopStudent[]; dropoffStudents: StopStudent[]; attendances: AttendanceRecord[] }
 
 function useTripTimer(startedAt: Date | null) {
@@ -30,9 +31,10 @@ function useTripTimer(startedAt: Date | null) {
 }
 
 function DriverScheduleWidget() {
+  const { t } = useTranslation()
   const [shifts, setShifts] = useState<ShiftRecord[]>([])
   useEffect(() => { fetch('/api/shifts').then(r => r.json()).then(d => setShifts((d.shifts || []).slice(0, 5))) }, [])
-  if (shifts.length === 0) return <div style={{ color:'var(--text-muted)', fontSize:'0.85rem', textAlign:'center', padding:'1rem' }}>No shifts scheduled</div>
+  if (shifts.length === 0) return <div style={{ color:'var(--text-muted)', fontSize:'0.85rem', textAlign:'center', padding:'1rem' }}>{t('common.noData')}</div>
   return (
     <div style={{ display:'grid', gap:'0.5rem' }}>
       {shifts.map((s: ShiftRecord) => (
@@ -49,18 +51,19 @@ function DriverScheduleWidget() {
 }
 
 function DriverTripHistoryWidget() {
+  const { t } = useTranslation()
   const [trips, setTrips] = useState<TripRecord[]>([])
   useEffect(() => { fetch('/api/trips/history?page=1').then(r => r.json()).then(d => setTrips((d.trips || []).slice(0, 5))) }, [])
-  if (trips.length === 0) return <div style={{ color:'var(--text-muted)', fontSize:'0.85rem', textAlign:'center', padding:'1rem' }}>No trips yet</div>
+  if (trips.length === 0) return <div style={{ color:'var(--text-muted)', fontSize:'0.85rem', textAlign:'center', padding:'1rem' }}>{t('common.noData')}</div>
   return (
     <div style={{ display:'grid', gap:'0.5rem' }}>
-      {trips.map((t: TripRecord) => (
-        <div key={t.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.6rem 0.8rem', background:'rgba(255,255,255,0.02)', borderRadius:8, border:'1px solid var(--surface-border)' }}>
+      {trips.map((tRec: TripRecord) => (
+        <div key={tRec.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.6rem 0.8rem', background:'rgba(255,255,255,0.02)', borderRadius:8, border:'1px solid var(--surface-border)' }}>
           <div>
-            <div style={{ fontWeight:600, fontSize:'0.85rem' }}>{t.routeName}</div>
-            <div style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>{new Date(t.date).toLocaleDateString()} · {t.pickedUp}↑ {t.droppedOff}↓ {t.absent}</div>
+            <div style={{ fontWeight:600, fontSize:'0.85rem' }}>{tRec.routeName}</div>
+            <div style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>{new Date(tRec.date).toLocaleDateString()} · {tRec.pickedUp}↑ {tRec.droppedOff}↓ {tRec.absent}</div>
           </div>
-          {t.avgRating && <span style={{ color:'#FFD100', fontWeight:700, fontSize:'0.85rem' }}>⭐ {t.avgRating}</span>}
+          {tRec.avgRating && <span style={{ color:'#FFD100', fontWeight:700, fontSize:'0.85rem' }}>⭐ {tRec.avgRating}</span>}
         </div>
       ))}
     </div>
@@ -68,6 +71,7 @@ function DriverTripHistoryWidget() {
 }
 
 export default function DriverDashboard() {
+  const { t } = useTranslation()
   const [data, setData] = useState<{ activeTrip?: { id: string; date: string; route: { stops: Stop[] } }; assignedRoute?: { id: string; name: string; stops?: Stop[]; students?: StopStudent[] }; busId?: string; busPlate?: string; busQrToken?: string; driverId?: string } | null>(null)
   const [loading, setLoading] = useState(true)
   const [currentStopIndex, setCurrentStopIndex] = useState(0)
@@ -80,6 +84,11 @@ export default function DriverDashboard() {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraTarget, setCameraTarget] = useState<string>('')
   const [capturedPhotos, setCapturedPhotos] = useState<Record<string, string>>({})
+  // Delay reporting state
+  const [showDelayPanel, setShowDelayPanel] = useState(false)
+  const [delayMinutes, setDelayMinutes] = useState(15)
+  const [delayReason, setDelayReason] = useState('Heavy Traffic')
+  const [sendingDelay, setSendingDelay] = useState(false)
   const router = useRouter()
   const prevTripId = useRef<string | null>(null)
   const tripTimer = useTripTimer(tripStartedAt)
@@ -272,19 +281,20 @@ export default function DriverDashboard() {
       </AnimatePresence>
 
       {/* Top Bar */}
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem', flexWrap:'wrap', gap: 12 }}>
         <div>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <h1 style={{ marginBottom:'0.25rem', fontSize:'1.8rem' }}>Driver Panel</h1>
+            <h1 style={{ marginBottom:'0.25rem', fontSize:'1.8rem' }}>{t('driver.title')}</h1>
             {xp > 0 && (
               <motion.span initial={{ scale:0 }} animate={{ scale:1 }} className="badge badge-xp" style={{ fontSize:'0.7rem' }}>
                 +{xp} XP
               </motion.span>
             )}
           </div>
-          <p style={{ color:'var(--text-muted)', margin:0 }}>{assignedRoute?.name || 'No Route Assigned'}</p>
+          <p style={{ color:'var(--text-muted)', margin:0 }}>{assignedRoute?.name || t('driver.noActiveTrip')}</p>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:'0.75rem' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', flexWrap:'wrap' }}>
+          <LanguageSwitcher />
           {offlineQueue > 0 && (
             <div style={{ color:'var(--warning)', fontWeight:'bold', fontSize:'0.85rem', padding:'0.4rem 0.75rem', background:'var(--warning-bg)', borderRadius:8, border:'1px solid rgba(245,158,11,0.3)' }}>
               {offlineQueue} pending
@@ -292,7 +302,7 @@ export default function DriverDashboard() {
           )}
           <button className="btn" style={{ background:'rgba(255,255,255,0.07)' }}
             onClick={() => { fetch('/api/auth/me', { method:'POST' }).then(() => router.push('/')) }}>
-            Logout
+            {t('common.logout')}
           </button>
         </div>
       </div>
@@ -301,7 +311,7 @@ export default function DriverDashboard() {
       {!assignedRoute && (
         <motion.div initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }} className="glass-panel" style={{ padding:'3rem', textAlign:'center' }}>
           <div style={{ marginBottom:'1rem', display:'flex', justifyContent:'center' }}><Bus size={64} color="var(--bus-yellow)"/></div>
-          <h2>No Route Assigned</h2>
+          <h2>{t('driver.noActiveTrip')}</h2>
           <p style={{ color:'var(--text-muted)' }}>Please contact the Administrator to assign you to a Bus and Route.</p>
         </motion.div>
       )}
@@ -347,7 +357,7 @@ export default function DriverDashboard() {
           <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.95 }}
             onClick={handleStartTrip} className="btn"
             style={{ width: '100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.15rem', padding:'1.15rem 0', borderRadius:'50px', background:'var(--bus-yellow)', color:'#111', fontWeight:800, boxShadow:'0 8px 30px -10px var(--bus-yellow-glow)' }}>
-            <Bus size={22} style={{marginRight:8}}/> Swipe to Start Route
+            <Bus size={22} style={{marginRight:8}}/> {t('driver.startTrip')}
           </motion.button>
         </motion.div>
       )}
@@ -421,19 +431,19 @@ export default function DriverDashboard() {
                     <motion.button whileHover={{ scale:1.05 }} whileTap={{ scale:0.95 }}
                       onClick={handleCompleteTrip} className="btn"
                       style={{ background:'var(--bus-yellow)', color:'#111', fontWeight:700 }}>
-                      End Trip
+                      {t('driver.endTrip')}
                     </motion.button>
                   ) : (
                     <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.95 }}
                       onClick={() => setCurrentStopIndex(c => c + 1)} className="btn"
                       style={{ background:'rgba(255,255,255,0.08)' }}>
-                      Next Stop →
+                      {t('common.next')} →
                     </motion.button>
                   )}
                 </div>
 
                 {stop.pickupStudents.length === 0 && stop.dropoffStudents.length === 0 && (
-                  <p style={{ color:'var(--text-muted)', textAlign:'center', padding:'1rem' }}>No students at this stop.</p>
+                  <p style={{ color:'var(--text-muted)', textAlign:'center', padding:'1rem' }}>{t('common.noData')}</p>
                 )}
 
                 <div style={{ display:'grid', gap:'0.75rem', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))' }}>
@@ -459,30 +469,42 @@ export default function DriverDashboard() {
                           )}
                           <div>
                             <div style={{ fontWeight:600, fontSize:'1rem' }}>{student.name}</div>
-                            <div style={{ fontSize:'0.78rem', color:'var(--text-muted)' }}>{student.grade} · {student.type}</div>
+                            <div style={{ fontSize:'0.78rem', color:'var(--text-muted)' }}>{student.grade} · {student.type === 'PICKUP' ? t('driver.pickup') : t('driver.dropoff')}</div>
+                            {/* Parent Confirmed Indicator */}
+                            {(() => {
+                              const att = stop.attendances.find((a: AttendanceRecord) => a.studentId === student.id)
+                              const parentConfirmed = student.type === 'PICKUP' ? att?.parentConfirmedPickup : att?.parentConfirmedDropoff
+                              return parentConfirmed ? (
+                                <div style={{ fontSize:'0.7rem', color:'var(--success)', fontWeight:700, marginTop:2, display:'flex', alignItems:'center', gap:3 }}>
+                                  <CheckCircle size={12} /> {t('parent.parentConfirmed')}
+                                </div>
+                              ) : null
+                            })()}
                           </div>
                           <motion.button whileTap={{ scale:0.85 }}
                             onClick={() => { setCameraTarget(student.id); setCameraOpen(true); }}
-                            style={{ width:30, height:30, borderRadius:'50%', border:'none', background:'rgba(255,255,255,0.08)', color:'#94A3B8', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.9rem', flexShrink: 0 }}
-                            title="Take verification photo">
-                                                      </motion.button>
+                            style={{ background:'none', border:'none', cursor:'pointer', padding:4, opacity:0.6 }}>
+                            <ScanFace size={20} />
+                          </motion.button>
                         </div>
 
                         {status ? (
-                          <span className={`badge ${status === 'ABSENT' ? 'badge-danger' : 'badge-success'}`}>
-                            {status === 'ABSENT' ? 'Absent' : status === 'PICKED_UP' ? 'Picked Up' : 'Dropped'}
-                          </span>
+                          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                            <span className={`badge badge-${status === 'ABSENT' ? 'danger' : 'success'}`} style={{ fontSize:'0.75rem' }}>
+                              {status === 'PICKED_UP' ? t('parent.boarded') : status === 'DROPPED_OFF' ? t('parent.droppedOff') : t('parent.absent')}
+                            </span>
+                          </div>
                         ) : (
-                          <div style={{ display:'flex', gap:'0.5rem' }}>
+                          <div style={{ display:'flex', gap:6 }}>
                             <motion.button whileTap={{ scale:0.9 }}
-                              onClick={() => recordAttendance(student.id, 'ABSENT')} className="btn"
-                              style={{ background:'rgba(239,68,68,0.1)', color:'var(--danger)', padding:'0.5rem 0.75rem', fontSize:'0.82rem' }}>
-                              Absent
+                              onClick={() => recordAttendance(student.id, 'ABSENT')}
+                              style={{ padding:'0.4rem 0.6rem', borderRadius:8, background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', color:'var(--danger)', fontSize:'0.78rem', cursor:'pointer', fontWeight:600 }}>
+                              {t('driver.absent')}
                             </motion.button>
-                            <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.95 }}
-                              onClick={() => recordAttendance(student.id, student.type==='PICKUP' ? 'PICKED_UP' : 'DROPPED_OFF')} className="btn"
-                              style={{ background:'var(--bus-yellow)', color:'#111', fontWeight:700, padding:'0.5rem 0.9rem', fontSize:'0.82rem' }}>
-                              {student.type === 'PICKUP' ? '↑ Pick Up' : '↓ Drop Off'}
+                            <motion.button whileTap={{ scale:0.9 }}
+                              onClick={() => recordAttendance(student.id, student.type === 'PICKUP' ? 'PICKED_UP' : 'DROPPED_OFF')}
+                              style={{ padding:'0.4rem 0.85rem', borderRadius:8, background: student.type === 'PICKUP' ? 'var(--success)' : 'var(--info)', color:'#fff', border:'none', fontSize:'0.78rem', cursor:'pointer', fontWeight:700 }}>
+                              {student.type === 'PICKUP' ? `↑ ${t('driver.pickup')}` : `↓ ${t('driver.dropoff')}`}
                             </motion.button>
                           </div>
                         )}
@@ -493,15 +515,72 @@ export default function DriverDashboard() {
               </motion.div>
             </AnimatePresence>
 
+            {/* ── Delay Reporting Panel ── */}
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'1.25rem', marginTop:'1rem' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: showDelayPanel ? '1rem' : 0 }}>
+                <h3 style={{ margin:0, fontSize:'1rem' }}>{t('driver.reportDelay')}</h3>
+                <motion.button whileTap={{ scale:0.95 }} onClick={() => setShowDelayPanel(p => !p)}
+                  style={{ background:'rgba(245,158,11,0.12)', border:'1px solid rgba(245,158,11,0.3)', color:'var(--warning)', borderRadius:8, padding:'0.4rem 0.9rem', fontSize:'0.82rem', fontWeight:700, cursor:'pointer' }}>
+                  {showDelayPanel ? t('common.cancel') : t('common.details')}
+                </motion.button>
+              </div>
+              {showDelayPanel && (
+                <div>
+                  <div style={{ marginBottom:'0.75rem' }}>
+                    <label style={{ fontSize:'0.8rem', color:'var(--text-muted)', display:'block', marginBottom:4 }}>{t('driver.delayReasonLabel')}</label>
+                    <select value={delayReason} onChange={e => setDelayReason(e.target.value)}
+                      style={{ width:'100%', padding:'0.6rem', background:'var(--surface-2)', border:'1px solid var(--surface-border)', borderRadius:8, color:'var(--text-main)', fontSize:'0.9rem' }}>
+                      <option>{t('driver.trafficDelay')}</option>
+                      <option>{t('driver.weatherDelay')}</option>
+                      <option>{t('driver.constructionDelay')}</option>
+                      <option>{t('driver.breakdownDelay')}</option>
+                    </select>
+                  </div>
+                  <div style={{ marginBottom:'0.75rem' }}>
+                    <label style={{ fontSize:'0.8rem', color:'var(--text-muted)', display:'block', marginBottom:4 }}>{t('driver.delayMinutesLabel')}</label>
+                    <div style={{ display:'flex', gap:6 }}>
+                      {[5, 10, 15, 20, 30].map(m => (
+                        <motion.button key={m} whileTap={{ scale:0.9 }} onClick={() => setDelayMinutes(m)}
+                          style={{ flex:1, padding:'0.5rem 0', borderRadius:8, border:`1px solid ${delayMinutes === m ? 'var(--warning)' : 'var(--surface-border)'}`, background: delayMinutes === m ? 'rgba(245,158,11,0.15)' : 'var(--surface-2)', color: delayMinutes === m ? 'var(--warning)' : 'var(--text-muted)', fontWeight: delayMinutes === m ? 700 : 400, fontSize:'0.82rem', cursor:'pointer' }}>
+                          +{m}m
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                  <motion.button whileTap={{ scale:0.97 }}
+                    disabled={sendingDelay}
+                    onClick={async () => {
+                      if (!data?.activeTrip) return
+                      setSendingDelay(true)
+                      try {
+                        const res = await fetch(`/api/trips/${data.activeTrip.id}`, {
+                          method:'PATCH', headers:{'Content-Type':'application/json'},
+                          body:JSON.stringify({ delayMinutes, delayReason })
+                        })
+                        if (res.ok) {
+                          showToast(`Delay reported: +${delayMinutes}m — Parents notified`, 'success')
+                          setShowDelayPanel(false)
+                        } else {
+                          showToast('Failed to report delay', 'error')
+                        }
+                      } catch { showToast('Network error', 'error') } finally { setSendingDelay(false) }
+                    }}
+                    style={{ width:'100%', padding:'0.85rem', background:'linear-gradient(135deg,#f59e0b,#d97706)', color:'#111', border:'none', borderRadius:10, fontWeight:800, fontSize:'0.95rem', cursor:'pointer' }}>
+                    {sendingDelay ? t('common.loading') : `🔔 ${t('driver.submitDelay')} (+${delayMinutes} ${t('common.minutes')})`}
+                  </motion.button>
+                </div>
+              )}
+            </motion.div>
+
             {/* ── My Schedule ── */}
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'1.25rem', marginTop:'1.5rem' }}>
-              <h3 style={{ margin:'0 0 0.75rem 0', fontSize:'1.1rem' }}>My Schedule</h3>
+              <h3 style={{ margin:'0 0 0.75rem 0', fontSize:'1.1rem' }}>{t('driver.shift')}</h3>
               <DriverScheduleWidget />
             </motion.div>
 
             {/* ── Recent Trip History ── */}
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="glass-panel" style={{ padding:'1.25rem', marginTop:'1rem' }}>
-              <h3 style={{ margin:'0 0 0.75rem 0', fontSize:'1.1rem' }}>Recent Trips</h3>
+              <h3 style={{ margin:'0 0 0.75rem 0', fontSize:'1.1rem' }}>{t('driver.tripHistory')}</h3>
               <DriverTripHistoryWidget />
             </motion.div>
 
@@ -514,7 +593,7 @@ export default function DriverDashboard() {
                 </div>
                 <button
                   onClick={async () => {
-                    if (confirm('EMERGENCY ALERT: This will immediately notify all parents and admin. Confirm?')) {
+                    if (confirm(t('driver.panicConfirm'))) {
                       playAlert()
                       navigator.geolocation.getCurrentPosition(
                         async (pos) => { await fetch('/api/emergency', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ latitude:pos.coords.latitude, longitude:pos.coords.longitude }) }); showToast('Emergency signal sent!', 'error') },
@@ -524,7 +603,7 @@ export default function DriverDashboard() {
                   }}
                   className="btn"
                   style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'linear-gradient(135deg,#ef4444,#dc2626)', color:'#fff', fontWeight:800, width:'100%', padding:'1.25rem', borderRadius:0, fontSize:'1.2rem', letterSpacing:1 }}>
-                  <ShieldAlert size={24} style={{marginRight:8}}/> PANIC BUTTON
+                  <ShieldAlert size={24} style={{marginRight:8}}/> {t('driver.panic')}
                 </button>
               </div>
             </motion.div>

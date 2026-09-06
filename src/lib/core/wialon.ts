@@ -9,7 +9,7 @@
  *  - API host: https://hst-api.wialon.com/wialon/ajax.html
  */
 
-import { redis, redisPublisher } from '@/lib/redis'
+import { redis, redisPublisher } from '@/lib/db/redis'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

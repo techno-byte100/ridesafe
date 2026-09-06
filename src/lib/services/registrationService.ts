@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
-import prisma from '../prisma'
+import prisma from '../db/prisma'
 import { billplzAdapter } from '../adapters/billplz'
 
 export const REGISTRATION_FEE = Number(process.env.REGISTRATION_FEE_AMOUNT || 50)

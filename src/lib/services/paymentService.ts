@@ -1,5 +1,5 @@
 import { bukkuAdapter } from '../adapters/bukku'
-import prisma from '../prisma'
+import prisma from '../db/prisma';
 
 export class PaymentService {
   /**

@@ -79,12 +79,12 @@ async function main() {
     }
   })
 
-  // Seed Stops
+  // Seed Stops (Kuala Lumpur area coordinates)
   const stop1 = await prisma.stop.create({
     data: {
-      name: 'Maple Street Corner',
-      latitude: 34.0522,
-      longitude: -118.2437,
+      name: 'Taman Desa Stop',
+      latitude: 3.1030,
+      longitude: 101.6870,
       order: 1,
       routeId: routeA.id
     }
@@ -92,9 +92,9 @@ async function main() {
 
   const stop2 = await prisma.stop.create({
     data: {
-      name: 'Oak Avenue Gate',
-      latitude: 34.0530,
-      longitude: -118.2450,
+      name: 'Sri Petaling Gate',
+      latitude: 3.0890,
+      longitude: 101.6980,
       order: 2,
       routeId: routeA.id
     }

@@ -32,11 +32,11 @@ interface MessageData {
   sender: { name: string };
 }
 
-const BusMap = dynamic(() => import('@/components/BusMap'), { ssr: false })
+const BusMap = dynamic(() => import('@/components/shared/BusMap'), { ssr: false })
 
 import { useAudio } from '@/hooks/useAudio'
 import { useTranslation } from '@/i18n/provider'
-import CalendarCard from '@/components/CalendarCard'
+import CalendarCard from '@/components/parent/CalendarCard'
 import { Target, Flame, ShieldCheck, Sunrise, AlertTriangle, CheckCircle, AlertCircle, Trophy, Medal, Award, Phone, Bus, Clock, Clipboard, Home, XCircle, User, Settings, Bell, HelpCircle, LogOut, Globe } from 'lucide-react'
 
 // ── Gamification helpers ──────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ function getLevelLabel(lvl: number): string {
 }
 
 export default function ParentDashboard() {
-  const { locale, setLocale } = useTranslation()
+  const { locale, setLocale, t } = useTranslation()
   const [students, setStudents] = useState<StudentData[]>([])
   const [drivers, setDrivers] = useState<DriverData[]>([])
   const [notifications, setNotifications] = useState<NotifData[]>([])
@@ -63,8 +63,13 @@ export default function ParentDashboard() {
   const [activeTab, setActiveTab] = useState<'HOME' | 'MY_CHILD' | 'MESSAGES' | 'PROFILE'>('HOME')
   const [showMap, setShowMap] = useState(false)
   const [busNearby, setBusNearby] = useState(false)
+  const [busNearbyStop, setBusNearbyStop] = useState<string>('')
   const busNearbyRef = useRef(false)
   const prevDriverLatRef = useRef<number | null>(null)
+  // Active trip delay info
+  const [activeTrip, setActiveTrip] = useState<{ id: string; delayMinutes?: number; delayReason?: string; routeName?: string } | null>(null)
+  // Confirmation loading state
+  const [confirming, setConfirming] = useState<string | null>(null)
 
   // Messages state
   const [messages, setMessages] = useState<MessageData[]>([])
@@ -98,21 +103,50 @@ export default function ParentDashboard() {
     }
   }, [])
 
-  // Proximity check — if driver location changes significantly, trigger alert
+  // Real GPS proximity check using Haversine formula to student's assigned pickup stop
   const checkBusProximity = (driversData: DriverData[], studentsData: StudentData[]) => {
     if (!studentsData[0]?.pickupStop) return
     const activeDriver = driversData[0]
-    if (!activeDriver?.lastLatitude) return
-    // Simulate proximity: if driver lat changed → bus is moving → alert after 3 polls
-    if (prevDriverLatRef.current !== null && prevDriverLatRef.current !== activeDriver.lastLatitude) {
+    if (!activeDriver?.lastLatitude || !activeDriver?.lastLongitude) return
+    const stop = studentsData[0].pickupStop
+    if (!stop.latitude || !stop.longitude) return
+
+    // Haversine distance in km
+    const R = 6371
+    const dLat = (stop.latitude - activeDriver.lastLatitude) * (Math.PI / 180)
+    const dLon = (stop.longitude - activeDriver.lastLongitude) * (Math.PI / 180)
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(activeDriver.lastLatitude * (Math.PI / 180)) * Math.cos(stop.latitude * (Math.PI / 180)) *
+      Math.sin(dLon/2) * Math.sin(dLon/2)
+    const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+    const THRESHOLD_KM = 0.5 // 500 metres
+    if (distKm <= THRESHOLD_KM) {
       if (!busNearbyRef.current) {
         busNearbyRef.current = true
         setBusNearby(true)
+        setBusNearbyStop(stop.name)
         playAlert()
         if (Notification.permission === 'granted') {
-          new Notification('RideSafe Alert', { body: 'Your bus is on its way! Get ready.', icon: '/favicon.ico' })
+          const etaMins = activeDriver.currentSpeedKmH && activeDriver.currentSpeedKmH > 0
+            ? Math.round((distKm / activeDriver.currentSpeedKmH) * 60)
+            : null
+          const etaStr = etaMins !== null ? ` ETA: ~${etaMins} min${etaMins !== 1 ? 's' : ''}.` : ''
+          try {
+            new Notification('RideSafe 🚌 Bus Approaching', {
+              body: `Your bus is approaching ${stop.name}!${etaStr} Get ready.`,
+              icon: '/favicon.ico'
+            })
+          } catch { /* ignore */ }
         }
-        setTimeout(() => { busNearbyRef.current = false; setBusNearby(false) }, 30000)
+        setTimeout(() => { busNearbyRef.current = false; setBusNearby(false); setBusNearbyStop('') }, 60000)
+      }
+    } else {
+      // Bus has moved away from stop — reset alert so it can re-fire next approach
+      if (busNearbyRef.current && distKm > THRESHOLD_KM + 0.2) {
+        busNearbyRef.current = false
+        setBusNearby(false)
+        setBusNearbyStop('')
       }
     }
     prevDriverLatRef.current = activeDriver.lastLatitude
@@ -156,6 +190,15 @@ export default function ParentDashboard() {
         const newNotifs = notificationsData.notifications || []
         setNotifications(newNotifs)
         setMessages(msgData.messages || [])
+
+        // Fetch active trip delay info
+        try {
+          const tripRes = await fetch('/api/trips/active')
+          if (tripRes.ok) {
+            const tripData = await tripRes.json()
+            if (tripData.trip) setActiveTrip(tripData.trip)
+          }
+        } catch { /* silent — delay info is supplementary */ }
 
         if (loading) setLoading(false)
       } catch (error) { console.error(error) }
@@ -273,15 +316,15 @@ export default function ParentDashboard() {
     </div>
   )
 
-  const todayStr = new Intl.DateTimeFormat('en-GB', { weekday:'long', day:'numeric', month:'long' }).format(new Date())
+  const todayStr = new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : (locale === 'zh' ? 'zh-CN' : 'en-GB'), { weekday:'long', day:'numeric', month:'long' }).format(new Date())
   const unreadNotifs = notifications.filter(n => !n.read).length
 
   // ── Tab icons ───────────────────────────────────────────────────────────────
   const NAV_TABS = [
-    { key:'HOME',       label:'Home',     icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-    { key:'MY_CHILD',  label:'My Child',  icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
-    { key:'MESSAGES',  label:'Messages',  icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
-    { key:'PROFILE',   label:'Profile',   icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
+    { key:'HOME',       label: t('nav.home'),     icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+    { key:'MY_CHILD',  label: t('parent.myChildren'),  icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
+    { key:'MESSAGES',  label: t('nav.messages'),  icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
+    { key:'PROFILE',   label: t('nav.profile'),   icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
   ] as const
 
   if (!appUnlocked) {
@@ -297,7 +340,7 @@ export default function ParentDashboard() {
                onClick={() => { playHorn(); setAppUnlocked(true); }}
                disabled={!isAlertReady || !isHornReady}
                className="btn btn-primary" style={{ padding: '1rem 3rem', borderRadius: '999px', fontSize: '1.1rem', fontWeight: 700 }}>
-               {(!isAlertReady || !isHornReady) ? 'Loading Assets...' : 'Initialize Tracker'}
+               {(!isAlertReady || !isHornReady) ? t('common.loading') : 'Initialize Tracker'}
             </motion.button>
          </motion.div>
       </div>
@@ -315,7 +358,8 @@ export default function ParentDashboard() {
               style={{ position:'fixed', top:0, left:0, right:0, zIndex:200,
                 background:'linear-gradient(90deg,#FFD100,#F5A623)', color:'#111', padding:'10px 16px',
                 display:'flex', alignItems:'center', gap:8, fontWeight:700, fontSize:14, textAlign:'center', justifyContent:'center' }}>
-              Your bus is approaching! Get ready now.
+              🚌 {t('parent.busApproaching')}
+              {drivers[0]?.etaMins != null && ` • ETA ~${drivers[0].etaMins} ${t('common.minutes')}`}
             </motion.div>
           )}
         </AnimatePresence>
@@ -326,8 +370,8 @@ export default function ParentDashboard() {
             <motion.div initial={{ opacity:0, scale:0.9 }} animate={{ opacity:1, scale:1 }} exit={{ opacity:0, scale:0.9 }}
               style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:100, background:'var(--bg-color)', display:'flex', flexDirection:'column' }}>
               <div className="mobile-header" style={{ borderRadius:0, display:'flex', justifyContent:'space-between', alignItems:'center', paddingBottom:'16px', marginBottom:0 }}>
-                <h2 style={{ margin:0, fontSize:'18px', color:'#f1f5f9' }}>️ Live Bus Tracking</h2>
-                <button onClick={() => setShowMap(false)} style={{ background:'rgba(255,255,255,0.15)', border:'none', color:'#f1f5f9', padding:'8px 16px', borderRadius:'20px', fontWeight:'bold', cursor:'pointer' }}>Close</button>
+                <h2 style={{ margin:0, fontSize:'18px', color:'#f1f5f9' }}>{t('parent.trackBus')}</h2>
+                <button onClick={() => setShowMap(false)} style={{ background:'rgba(255,255,255,0.15)', border:'none', color:'#f1f5f9', padding:'8px 16px', borderRadius:'20px', fontWeight:'bold', cursor:'pointer' }}>{t('common.close')}</button>
               </div>
               <div style={{ flex:1, position:'relative' }}>
                 {typeof window !== 'undefined' && <BusMap drivers={drivers} />}
@@ -380,6 +424,24 @@ export default function ParentDashboard() {
           {/* ── HOME TAB ──────────────────────────────────────────────────────── */}
           {activeTab === 'HOME' && (
             <motion.div initial={{ opacity:0, y:10 }} animate={{ opacity:1, y:0 }}>
+
+              {/* ── Delay Notice Card ── */}
+              {activeTrip && activeTrip.delayMinutes && activeTrip.delayMinutes > 0 && (
+                <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }}
+                  className="mobile-card" style={{ marginBottom:14, background:'linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05))', border:'1px solid rgba(245,158,11,0.4)', padding:'14px 16px' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <div style={{ fontSize:22 }}>⚠️</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:700, fontSize:14, color:'var(--warning)' }}>{t('parent.delayNotice')}</div>
+                      <div style={{ fontSize:13, color:'var(--text-main)', marginTop:2 }}>
+                        {activeTrip.routeName || t('parent.assignedRoute')} {t('parent.routeRunningLate')} ~{activeTrip.delayMinutes} {t('common.minutes')}
+                        {activeTrip.delayReason ? ` (${t('common.reason')}: ${activeTrip.delayReason})` : ''}.
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {students.map(student => (
                 <div key={student.id}>
                   {/* Student card */}
@@ -392,7 +454,7 @@ export default function ParentDashboard() {
                       <div style={{ fontSize:'13px', color:'var(--text-muted)', marginTop:'3px' }}>{student.grade} · {student.level}</div>
                     </div>
                     <span className={`badge ${student.status === 'CHECKED_OUT' ? 'badge-success' : 'badge-warning'}`}>
-                      {student.status === 'CHECKED_OUT' ? 'At School' : 'En Route'}
+                      {student.status === 'CHECKED_OUT' ? t('parent.droppedOff') : t('parent.onBus')}
                     </span>
                   </div>
 
@@ -403,20 +465,56 @@ export default function ParentDashboard() {
                       <div style={{ width:44, height:44, borderRadius:'50%', background:'var(--info-bg)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'18px' }}>‍️</div>
                       <div style={{ flex:1 }}>
                         <div style={{ fontWeight:600, color:'var(--text-main)' }}>{drivers[0].name}</div>
-                        <div style={{ fontSize:'12px', color:'var(--text-muted)' }}>Your Driver · {drivers[0].phone || 'No phone'}</div>
+                        <div style={{ fontSize:'12px', color:'var(--text-muted)' }}>{t('parent.assignedDriver')} · {drivers[0].phone || 'No phone'}</div>
                       </div>
                       <div className={`badge ${drivers[0].lastLatitude ? 'badge-success' : 'badge-pending'}`} style={{ fontSize:'11px' }}>
-                        {drivers[0].lastLatitude ? '️ Secure Tracking Active' : 'Offline'}
+                        {drivers[0].lastLatitude ? '️ Online' : 'Offline'}
                       </div>
                     </motion.div>
                   )}
 
                   {/* Live map button */}
                   <motion.button whileTap={{ scale:0.97 }} onClick={() => setShowMap(true)}
-                    style={{ width:'100%', padding:'14px', background:'linear-gradient(135deg,#FFD100,#F5A623)', color:'#111', border:'none', borderRadius:'14px', fontWeight:800, fontSize:'15px', marginBottom:'14px', display:'flex', justifyContent:'center', alignItems:'center', gap:'8px', boxShadow:'0 4px 16px rgba(255,209,0,0.4)', cursor:'pointer' }}>
+                    style={{ width:'100%', padding:'14px', background:'linear-gradient(135deg,#FFD100,#F5A623)', color:'#111', border:'none', borderRadius:'14px', fontWeight:800, fontSize:'15px', marginBottom:'10px', display:'flex', justifyContent:'center', alignItems:'center', gap:'8px', boxShadow:'0 4px 16px rgba(255,209,0,0.4)', cursor:'pointer' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
-                    Live Map Tracking
+                    {t('parent.trackBus')}
                   </motion.button>
+
+                  {/* ── Two-Way Confirmation Buttons ── */}
+                  {activeTrip && (
+                    <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+                      <motion.button whileTap={{ scale:0.95 }}
+                        disabled={confirming === `pickup-${student.id}`}
+                        onClick={async () => {
+                          setConfirming(`pickup-${student.id}`)
+                          try {
+                            await fetch('/api/attendance', {
+                              method:'POST', headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({ tripId: activeTrip.id, studentId: student.id, action:'PARENT_PICKUP_CONFIRMED' })
+                            })
+                            playHorn()
+                          } catch { /* silent */ } finally { setConfirming(null) }
+                        }}
+                        style={{ flex:1, padding:'11px 0', background:'rgba(16,185,129,0.15)', border:'1px solid rgba(16,185,129,0.4)', color:'var(--success)', borderRadius:12, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>
+                        {confirming === `pickup-${student.id}` ? '…' : `✅ ${t('parent.confirmBoarded')}`}
+                      </motion.button>
+                      <motion.button whileTap={{ scale:0.95 }}
+                        disabled={confirming === `dropoff-${student.id}`}
+                        onClick={async () => {
+                          setConfirming(`dropoff-${student.id}`)
+                          try {
+                            await fetch('/api/attendance', {
+                              method:'POST', headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({ tripId: activeTrip.id, studentId: student.id, action:'PARENT_DROPOFF_CONFIRMED' })
+                            })
+                            playHorn()
+                          } catch { /* silent */ } finally { setConfirming(null) }
+                        }}
+                        style={{ flex:1, padding:'11px 0', background:'rgba(59,130,246,0.15)', border:'1px solid rgba(59,130,246,0.4)', color:'#60a5fa', borderRadius:12, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>
+                        {confirming === `dropoff-${student.id}` ? '…' : `🏠 ${t('parent.confirmDropoff')}`}
+                      </motion.button>
+                    </div>
+                  )}
                 </div>
               ))}
 

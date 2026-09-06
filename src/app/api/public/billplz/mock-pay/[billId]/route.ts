@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import prisma from '@/lib/db/prisma'
 import { billplzAdapter } from '@/lib/adapters/billplz'
 import { registrationService } from '@/lib/services/registrationService'
 

@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { paymentService } from '@/lib/services/paymentService';
-import { billingGenerateSchema, validateBody } from '@/lib/validation';
+import { billingGenerateSchema, validateBody } from '@/lib/core/validation';
+import { getUserFromSession } from '@/lib/auth/auth';
+
+const ADMIN_ROLES = ['ADMIN', 'SUPER_ADMIN', 'SCHOOL_ADMIN'];
 
 export async function POST(req: Request) {
   try {
+    // B006 fix: Require admin authentication before generating invoices
+    const user = await getUserFromSession();
+    if (!user || !ADMIN_ROLES.includes(user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     const validation = validateBody(billingGenerateSchema, body);
     if (!validation.success) {

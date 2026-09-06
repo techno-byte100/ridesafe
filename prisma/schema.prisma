@@ -106,6 +106,9 @@ model Attendance {
   latitude  Float?
   longitude Float?
   timestamp DateTime @default(now())
+  // Two-way confirmation: set to true when parent confirms their side
+  parentConfirmedPickup  Boolean @default(false)
+  parentConfirmedDropoff Boolean @default(false)
 
   trip    Trip    @relation(fields: [tripId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
@@ -188,6 +191,9 @@ model Trip {
   busId    String?
   status   String   @default("TRIP_CREATED")
   date     DateTime @default(now())
+  // Delay reporting: driver/admin can log a delay with reason
+  delayMinutes Int?    @default(0)
+  delayReason  String?
 
   route       Route        @relation(fields: [routeId], references: [id])
   driver      User         @relation("DriverTrips", fields: [driverId], references: [id])

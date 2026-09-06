@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getUserFromSession } from '@/lib/auth'
+import { getUserFromSession } from '@/lib/auth/auth'
 import { getKatsanaAdapter } from '@/lib/adapters/katsana'
 
 export const dynamic = 'force-dynamic'

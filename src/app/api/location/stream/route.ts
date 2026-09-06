@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { redisSubscriber } from '@/lib/redis';
-import { getUserFromSession } from '@/lib/auth';
+import { redisSubscriber } from '@/lib/db/redis';
+import { getUserFromSession } from '@/lib/auth/auth';
 
 export const dynamic = 'force-dynamic';
 

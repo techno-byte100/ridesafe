@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUserFromSession, clearSession } from '@/lib/auth'
-import prisma from '@/lib/prisma'
+import { getUserFromSession, clearSession } from '@/lib/auth/auth'
+import prisma from '@/lib/db/prisma'
 
 export const dynamic = 'force-dynamic'
 

@@ -25,7 +25,10 @@ const HC = {
   pill:       '9999px',
 }
 
+import { useTranslation, LanguageSwitcher } from '@/i18n/provider'
+
 export default function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [showPw, setShowPw]     = useState(false)
@@ -45,7 +48,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Login failed')
+      if (!res.ok) throw new Error(data.error || t('auth.invalidCredentials'))
       const role = data.user.role
       if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'SCHOOL_ADMIN') {
         router.push('/admin')
@@ -55,7 +58,7 @@ export default function LoginPage() {
         router.push('/parent')
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+      setError(err instanceof Error ? err.message : t('common.error'))
     } finally {
       setLoading(false)
     }
@@ -158,14 +161,18 @@ export default function LoginPage() {
         }}
       >
         <div style={{ maxWidth: 360, width: '100%', margin: '0 auto' }}>
+          <div style={{ display:'flex', justifyContent:'flex-end', marginBottom: 20 }}>
+            <LanguageSwitcher />
+          </div>
+
           <h2 style={{
             fontFamily: 'var(--font-sora, Sora, system-ui)',
             fontSize: 28, fontWeight: 700, color: HC.text, letterSpacing: '-0.03em', margin: 0,
           }}>
-            Welcome back
+            {t('auth.loginTitle')}
           </h2>
           <p style={{ color: HC.text2, marginTop: 8, marginBottom: 30, fontSize: 14.5 }}>
-            Sign in to your transport dashboard.
+            {t('auth.loginSubtitle')}
           </p>
 
           {/* Error */}
@@ -186,7 +193,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin}>
             {/* Email */}
             <label style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.1em', color: HC.text3, display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>
-              Email
+              {t('auth.email')}
             </label>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
@@ -202,7 +209,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                placeholder="your@email.com"
+                placeholder={t('auth.enterEmail')}
                 style={{
                   flex: 1, background: 'transparent', border: 'none', outline: 'none',
                   color: HC.text, fontSize: 14.5, fontFamily: 'inherit',
@@ -212,7 +219,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <label style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.1em', color: HC.text3, display: 'block', marginBottom: 8, textTransform: 'uppercase' }}>
-              Password
+              {t('auth.password')}
             </label>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 10,
@@ -259,11 +266,11 @@ export default function LoginPage() {
                 style={{ fontSize: 13, color: HC.yellow, fontWeight: 600, cursor: 'pointer' }}
                 onClick={() => setShowForgotMsg(v => !v)}
               >
-                Forgot password?
+                {t('auth.forgotPassword')}
               </span>
               {showForgotMsg && (
                 <div style={{ marginTop: 8, fontSize: 12, color: HC.text2, background: HC.surface2, border: `1px solid ${HC.line}`, borderRadius: HC.r, padding: '10px 14px', textAlign: 'left' }}>
-                  Please contact your school administrator to reset your password.
+                  {t('auth.forgotNotice')}
                 </div>
               )}
             </div>
@@ -287,47 +294,48 @@ export default function LoginPage() {
                 transition: 'transform 0.18s ease, box-shadow 0.18s ease',
               }}
             >
-              {loading ? 'Signing in…' : <>Sign in <span style={{ marginLeft: 2 }}>→</span></>}
+              {loading ? t('auth.signingIn') : <>{t('auth.login')} <span style={{ marginLeft: 2 }}>→</span></>}
             </motion.button>
           </form>
 
-          {/* Role pills */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 24, justifyContent: 'center' }}>
-            {(['Admin', 'Driver', 'Parent'] as const).map((r, i) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => {
-                  if (r === 'Admin') {
-                    setEmail('admin@ridesafe.com')
+          {/* Demo Role pills */}
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', color: HC.text3, textTransform: 'uppercase', marginBottom: 10 }}>
+              {t('auth.demoAccounts')}
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              {[
+                { label: t('auth.adminDemo'), email: 'admin@ridesafe.com' },
+                { label: t('auth.driverDemo'), email: 'driver@ridesafe.com' },
+                { label: t('auth.parentDemo'), email: 'parent1@ridesafe.com' },
+              ].map((r) => (
+                <button
+                  key={r.email}
+                  type="button"
+                  onClick={() => {
+                    setEmail(r.email)
                     setPassword('password123')
-                  } else if (r === 'Driver') {
-                    setEmail('driver@ridesafe.com')
-                    setPassword('password123')
-                  } else if (r === 'Parent') {
-                    setEmail('parent@ridesafe.com')
-                    setPassword('password123')
-                  }
-                }}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', padding: '5px 14px',
-                  borderRadius: HC.pill, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.04em',
-                  background: 'rgba(255,214,10,0.15)',
-                  color: HC.yellow,
-                  border: `1px solid rgba(255,214,10,0.3)`,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,214,10,0.25)'
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,214,10,0.15)'
-                }}
-              >
-                {r}
-              </button>
-            ))}
+                  }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', padding: '5px 12px',
+                    borderRadius: HC.pill, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.04em',
+                    background: 'rgba(255,214,10,0.15)',
+                    color: HC.yellow,
+                    border: `1px solid rgba(255,214,10,0.3)`,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,214,10,0.25)'
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,214,10,0.15)'
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div style={{ marginTop: 28, textAlign: 'center', fontSize: 12.5, color: HC.text3 }}>

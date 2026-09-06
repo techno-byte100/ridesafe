@@ -10,9 +10,9 @@
  * Neither Wialon nor Katsana are called directly from the browser.
  */
 
-import { getWialonAdapter }  from '@/lib/wialon'
+import { getWialonAdapter }  from '@/lib/core/wialon'
 import { getKatsanaAdapter } from '@/lib/adapters/katsana'
-import prisma from '../prisma'
+import prisma from '../db/prisma';
 
 export type TrackingSource = 'WIALON' | 'KATSANA' | 'MOBILE'
 

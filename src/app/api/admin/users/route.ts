@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { getUserFromSession } from '@/lib/auth'
+import prisma from '@/lib/db/prisma'
+import { getUserFromSession } from '@/lib/auth/auth'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'

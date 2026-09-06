@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { getUserFromSession } from '@/lib/auth'
-import { locationSchema, validateBody } from '@/lib/validation'
-import { redisPublisher } from '@/lib/redis'
+import prisma from '@/lib/db/prisma'
+import { getUserFromSession } from '@/lib/auth/auth'
+import { locationSchema, validateBody } from '@/lib/core/validation'
+import { redisPublisher } from '@/lib/db/redis'
 import { trackingService } from '@/lib/services/trackingService'
 
 export const dynamic = 'force-dynamic'
@@ -143,8 +143,8 @@ export async function GET() {
     })
 
     // Default to Kuala Lumpur if school coordinates not configured
-    const schoolLat = parseFloat(settings.find((s: { key: string; value: string }) => s.key === 'schoolLat')?.value || '34.0522')
-    const schoolLng = parseFloat(settings.find((s: { key: string; value: string }) => s.key === 'schoolLng')?.value || '-118.2437')
+    const schoolLat = parseFloat(settings.find((s: { key: string; value: string }) => s.key === 'schoolLat')?.value || '3.1390')
+    const schoolLng = parseFloat(settings.find((s: { key: string; value: string }) => s.key === 'schoolLng')?.value || '101.6869')
     const geofenceRadiusKm = parseFloat(settings.find((s: { key: string; value: string }) => s.key === 'geofenceRadius')?.value || '500') / 1000 // default 500m
 
     // Active trips drive who we should be tracking — this lets buses on

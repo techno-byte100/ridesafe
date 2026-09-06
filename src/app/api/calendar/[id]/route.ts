@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { getUserFromSession } from '@/lib/auth'
+import prisma from '@/lib/db/prisma'
+import { getUserFromSession } from '@/lib/auth/auth'
 
 // Next.js 15: params is now a Promise
 type RouteContext = { params: Promise<{ id: string }> }

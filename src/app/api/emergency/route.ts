@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
-import { getUserFromSession } from '@/lib/auth'
+import prisma from '@/lib/db/prisma'
+import { getUserFromSession } from '@/lib/auth/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +12,13 @@ export async function POST(req: NextRequest) {
         }
 
         const { latitude, longitude } = await req.json()
+
+        // Fetch driver name from DB (JWT payload only contains id/role, not name)
+        const driverRecord = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { name: true }
+        })
+        const driverName = driverRecord?.name || user.id
 
         // Create a new emergency alert
         const alert = await prisma.emergencyAlert.create({
@@ -59,7 +66,7 @@ export async function POST(req: NextRequest) {
 
         // Notify all Admins
         const admins = await prisma.user.findMany({
-            where: { role: { in: ['SUPER_ADMIN', 'SCHOOL_ADMIN'] } },
+            where: { role: { in: ['ADMIN', 'SUPER_ADMIN', 'SCHOOL_ADMIN'] } },
             select: { id: true, name: true }
         });
 
@@ -67,8 +74,7 @@ export async function POST(req: NextRequest) {
             notificationsToCreate.push({
                 userId: admin.id,
                 title: '🚨 DRIVER EMERGENCY',
-                // @ts-expect-error Prisma generated types lag on select
-                body: `Emergency panic button triggered by ${user.name}${activeTrip ? ` on route ${activeTrip.route.name}` : ''}.`,
+                body: `Emergency panic button triggered by ${driverName}${activeTrip ? ` on route ${activeTrip.route.name}` : ''}.`,
                 type: 'EMERGENCY'
             });
         });
