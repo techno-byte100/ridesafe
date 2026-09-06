@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, AlertTriangle, Bus, Plus, Pencil, Trash2, MapPin, Settings2 } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Bus, Plus, Pencil, Trash2, MapPin, Settings2, X } from 'lucide-react'
 import { useTranslation } from '@/i18n/provider'
 
 const defaultBusForm = { plateNumber: '', capacity: '30', driverId: '', routeId: '', wialonUnitId: '', katsanaVehicleId: '' }

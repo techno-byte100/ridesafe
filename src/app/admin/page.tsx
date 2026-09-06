@@ -457,7 +457,7 @@ export default function AdminDashboard() {
               {activeTab === 'MESSAGES'       && <MessagesTab />}
               {activeTab === 'CALENDAR'       && <AcademicCalendarTab />}
               {activeTab === 'ORGANIZATIONS'  && <OrganizationsTab />}
-              {activeTab === 'SUPERUSERS'     && <UsersTab superAdminView searchQuery={searchQuery} />}
+              {activeTab === 'SUPERUSERS'     && <UsersTab currentUserRole={currentUserRole} searchQuery={searchQuery} />}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, AlertTriangle, UserPlus, AlertCircle, Pencil, Trash2, ShieldCheck } from 'lucide-react'
+import { CheckCircle, AlertTriangle, UserPlus, AlertCircle, Pencil, Trash2, ShieldCheck, Bus, X, Key, Mail, LogOut, Check, Shield } from 'lucide-react'
 import { useTranslation } from '@/i18n/provider'
 
 interface User { id: string; name: string; email: string; role: string; phone?: string; buses?: { plateNumber: string }[]; organizationId?: string }
