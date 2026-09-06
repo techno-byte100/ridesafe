@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertTriangle, Check, UserX, Bus, Download, Trash2, CalendarDays } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface RosterEntry {
   studentId: string; name: string; grade: string
@@ -29,6 +30,7 @@ function todayStr() {
 }
 
 export default function AttendanceTab() {
+  const { t } = useTranslation()
   const [date, setDate] = useState(todayStr())
   const [routeId, setRouteId] = useState('')
   const [routes, setRoutes] = useState<Route[]>([])
@@ -37,6 +39,13 @@ export default function AttendanceTab() {
   const [busyKey, setBusyKey] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
+
+  const STATUS_META_T = {
+    PICKED_UP:   { label: t('parent.boarded') || 'Picked Up',   color: 'var(--info)',    bg: 'rgba(59,130,246,0.12)' },
+    DROPPED_OFF: { label: t('parent.droppedOff') || 'Dropped Off', color: 'var(--success)', bg: 'rgba(16,185,129,0.12)' },
+    ABSENT:      { label: t('parent.absent') || 'Absent',      color: 'var(--danger)',  bg: 'rgba(239,68,68,0.12)' },
+    NOT_MARKED:  { label: 'Not Marked',  color: 'var(--text-muted)', bg: 'rgba(255,255,255,0.05)' },
+  }
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast(msg); setToastType(type); setTimeout(() => setToast(''), 3000)
@@ -70,12 +79,12 @@ export default function AttendanceTab() {
             body: JSON.stringify({ tripId: trip.tripId, studentId: entry.studentId, action })
           })
       if (res.ok) {
-        showToast(`${entry.name} marked ${STATUS_META[action].label.toLowerCase()}`)
+        showToast(`${entry.name} marked ${STATUS_META_T[action].label.toLowerCase()}`)
         load()
       } else {
-        const e = await res.json(); showToast(e.error || 'Failed to update', 'error')
+        const e = await res.json(); showToast(e.error || t('common.error'), 'error')
       }
-    } catch { showToast('Network error', 'error') } finally { setBusyKey(null) }
+    } catch { showToast(t('common.error'), 'error') } finally { setBusyKey(null) }
   }
 
   const clearStatus = async (trip: TripAttendance, entry: RosterEntry) => {
@@ -93,7 +102,7 @@ export default function AttendanceTab() {
   const exportCSV = () => {
     const rows = [['Route', 'Driver', 'Student', 'Grade', 'Status', 'Time']]
     trips.forEach(t => t.roster.forEach(s => rows.push([
-      t.routeName, t.driverName, s.name, s.grade, STATUS_META[s.status].label,
+      t.routeName, t.driverName, s.name, s.grade, STATUS_META_T[s.status].label,
       s.timestamp ? new Date(s.timestamp).toLocaleTimeString() : ''
     ])))
     const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
@@ -135,10 +144,10 @@ export default function AttendanceTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <CalendarDays size={20} color="var(--primary)" /> Attendance
+              <CalendarDays size={20} color="var(--primary)" /> {t('nav.attendance')}
             </h3>
             <div style={{ fontSize: '0.83rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              {summary.total} students across {trips.length} trip{trips.length !== 1 ? 's' : ''} on {date}
+              {summary.total} {t('nav.students').toLowerCase()} across {trips.length} trip{trips.length !== 1 ? 's' : ''} on {date}
             </div>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -158,11 +167,11 @@ export default function AttendanceTab() {
         {/* Summary stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: '0.75rem', marginTop: '1.5rem' }}>
           {[
-            ['Total', summary.total, 'var(--text-main)'],
-            ['Picked Up', summary.pickedUp, STATUS_META.PICKED_UP.color],
-            ['Dropped Off', summary.droppedOff, STATUS_META.DROPPED_OFF.color],
-            ['Absent', summary.absent, STATUS_META.ABSENT.color],
-            ['Not Marked', summary.notMarked, STATUS_META.NOT_MARKED.color],
+            ['TOTAL', summary.total, 'var(--text-main)'],
+            [STATUS_META_T.PICKED_UP.label.toUpperCase(), summary.pickedUp, STATUS_META_T.PICKED_UP.color],
+            [STATUS_META_T.DROPPED_OFF.label.toUpperCase(), summary.droppedOff, STATUS_META_T.DROPPED_OFF.color],
+            [STATUS_META_T.ABSENT.label.toUpperCase(), summary.absent, STATUS_META_T.ABSENT.color],
+            [STATUS_META_T.NOT_MARKED.label.toUpperCase(), summary.notMarked, STATUS_META_T.NOT_MARKED.color],
           ].map(([label, val, color]) => (
             <div key={label as string} className="glass-panel" style={{ padding: '0.75rem 1rem', textAlign: 'center', borderLeft: `3px solid ${color}` }}>
               <div style={{ fontSize: '1.4rem', fontWeight: 800, color: color as string }}>{val}</div>
@@ -208,7 +217,7 @@ export default function AttendanceTab() {
 
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {trip.roster.map(entry => {
-                  const meta = STATUS_META[entry.status]
+                  const meta = STATUS_META_T[entry.status]
                   const key = `${trip.tripId}:${entry.studentId}`
                   const busy = busyKey === key
                   return (

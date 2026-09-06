@@ -294,19 +294,19 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                 {currentUserRole === 'SUPER_ADMIN' && (
                     <motion.div variants={cardVariants} className="bento-card" style={{ padding: '2rem', alignSelf: 'start' }}>
                         <h3 style={{ marginTop: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Settings size={18} /> System Overview
+                            <Settings size={18} /> {t('admin.overview') || 'System Overview'}
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div style={{ padding: '1rem', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--surface-border)' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Total Students (all orgs)</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{t('overview.totalStudents')} (All Orgs)</div>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>{students.length}</div>
                             </div>
                             <div style={{ padding: '1rem', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--surface-border)' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Active Trips</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{t('overview.activeTrips')}</div>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--bus-yellow)' }}>{activeTrips}</div>
                             </div>
                             <div style={{ padding: '1rem', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--surface-border)' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Open Emergencies</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{t('overview.openEmergencies')}</div>
                                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: emergencies.length > 0 ? 'var(--danger)' : 'var(--success)' }}>{emergencies.length}</div>
                             </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
@@ -319,10 +319,10 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                 {/* Students overview */}
                 <motion.div variants={cardVariants} className="bento-card" style={{ padding: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>Students Overview</h3>
+                        <h3 style={{ margin: 0 }}>{t('nav.students')} {t('nav.overview')}</h3>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            <span className="badge badge-success">{presentStudents} In</span>
-                            <span className="badge badge-pending">{students.length - presentStudents} Out</span>
+                            <span className="badge badge-success">{presentStudents} IN</span>
+                            <span className="badge badge-pending">{students.length - presentStudents} OUT</span>
                         </div>
                     </div>
 
