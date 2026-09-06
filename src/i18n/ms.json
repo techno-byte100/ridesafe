@@ -16,7 +16,40 @@
     "maintenance": "Penyelenggaraan",
     "announcements": "Pengumuman",
     "profile": "Profil",
-    "billing": "Pengebilan"
+    "billing": "Pengebilan",
+    "groupOperations": "OPERASI",
+    "groupManagement": "PENGURUSAN",
+    "groupIntelligence": "KECERDASAN",
+    "superAdmin": "PENTADBIR TERTINGGI",
+    "aiOptimize": "Pengoptimuman Laluan AI",
+    "academicCalendar": "Kalendar Akademik",
+    "organisations": "Organisasi",
+    "allUsersGlobal": "Semua Pengguna (Global)"
+  },
+  "overview": {
+    "totalStudents": "Jumlah Pelajar",
+    "checkedIn": "Telah Mendaftar Masuk",
+    "activeTrips": "Perjalanan Aktif",
+    "openEmergencies": "Kecemasan Terbuka",
+    "activeEmergencies": "KECEMASAN AKTIF",
+    "orgSettings": "Tetapan Organisasi",
+    "schoolName": "Nama Sekolah",
+    "pickupTimes": "Masa Pengambilan",
+    "geofenceRadius": "Jejari Geofence (m)",
+    "quickSettings": "Tetapan Pantas"
+  },
+  "analytics": {
+    "title": "Analitik Data",
+    "onTimeRate": "Kadar Tepat Masa",
+    "avgDelay": "Purata Kelewatan",
+    "fuelSaved": "Bahan Api Diselamatkan",
+    "totalDistance": "Jumlah Jarak",
+    "studentAttendance": "Kehadiran Pelajar",
+    "routeEfficiency": "Kecekapan Laluan",
+    "maintenanceCosts": "Kos Penyelenggaraan",
+    "weekly": "Mingguan",
+    "monthly": "Bulanan",
+    "yearly": "Tahunan"
   },
   "common": {
     "loading": "Memuatkan...",

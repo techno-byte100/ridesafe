@@ -16,7 +16,40 @@
     "maintenance": "车辆维护",
     "announcements": "通知公告",
     "profile": "个人资料",
-    "billing": "账单"
+    "billing": "账单",
+    "groupOperations": "运营管理",
+    "groupManagement": "系统管理",
+    "groupIntelligence": "智能分析",
+    "superAdmin": "超级管理员",
+    "aiOptimize": "AI 路线优化",
+    "academicCalendar": "校历",
+    "organisations": "机构管理",
+    "allUsersGlobal": "所有用户 (全局)"
+  },
+  "overview": {
+    "totalStudents": "学生总数",
+    "checkedIn": "已签到",
+    "activeTrips": "进行中行程",
+    "openEmergencies": "待处理紧急情况",
+    "activeEmergencies": "活跃紧急警报",
+    "orgSettings": "机构设置",
+    "schoolName": "学校名称",
+    "pickupTimes": "接送时间",
+    "geofenceRadius": "电子围栏半径 (米)",
+    "quickSettings": "快捷设置"
+  },
+  "analytics": {
+    "title": "数据分析",
+    "onTimeRate": "准点率",
+    "avgDelay": "平均延误",
+    "fuelSaved": "节省燃料",
+    "totalDistance": "总行驶距离",
+    "studentAttendance": "学生出勤率",
+    "routeEfficiency": "路线效率",
+    "maintenanceCosts": "维护成本",
+    "weekly": "本周",
+    "monthly": "本月",
+    "yearly": "本年"
   },
   "common": {
     "loading": "加载中...",

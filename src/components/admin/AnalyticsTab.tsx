@@ -6,6 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, Area, AreaChart,
 } from 'recharts'
+import { useTranslation } from '@/i18n/provider'
 
 const COLORS = ['#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6']
 
@@ -21,6 +22,7 @@ interface AnalyticsData {
 export default function AnalyticsTab() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     fetch('/api/analytics').then(r => r.json()).then(d => {
@@ -52,10 +54,10 @@ export default function AnalyticsTab() {
       {/* KPI Row */}
       <div className="bento-grid" style={{ marginBottom: '2rem' }}>
         {[
-          { icon: <GraduationCap size={28}/>, label: 'Total Students', val: kpis.totalStudents, color: 'var(--primary)' },
-          { icon: <Bus size={28}/>, label: 'Trips (7d)', val: kpis.totalTrips, color: 'var(--bus-yellow)' },
-          { icon: <CheckCircle size={28}/>, label: 'Completion Rate', val: `${kpis.completionRate}%`, color: 'var(--success)' },
-          { icon: <BarChart3 size={28}/>, label: 'On-Time Rate', val: `${kpis.onTimeRate}%`, color: '#8B5CF6' },
+          { icon: <GraduationCap size={28}/>, label: t('overview.totalStudents'), val: kpis.totalStudents, color: 'var(--primary)' },
+          { icon: <Bus size={28}/>, label: t('analytics.monthly'), val: kpis.totalTrips, color: 'var(--bus-yellow)' },
+          { icon: <CheckCircle size={28}/>, label: t('analytics.studentAttendance'), val: `${kpis.completionRate}%`, color: 'var(--success)' },
+          { icon: <BarChart3 size={28}/>, label: t('analytics.onTimeRate'), val: `${kpis.onTimeRate}%`, color: '#8B5CF6' },
         ].map(({ icon, label, val, color }) => (
           <motion.div key={label} variants={cardAnim} className="bento-card" style={{ textAlign: 'center', padding: '1.75rem' }}>
             <div style={{ fontSize: '2rem', marginBottom: 8 }}>{icon}</div>
@@ -107,7 +109,7 @@ export default function AnalyticsTab() {
 
         {/* Pie Chart: Student Status */}
         <motion.div variants={cardAnim} className="bento-card" style={{ padding: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>Student Status Breakdown</h3>
+          <h3 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>{t('nav.students')} {t('common.status')}</h3>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie data={statusBreakdown} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={4} strokeWidth={0}>

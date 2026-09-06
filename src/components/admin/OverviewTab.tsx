@@ -3,12 +3,14 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, Bus, AlertTriangle, GraduationCap, Settings } from 'lucide-react'
 import { useAudio } from '@/hooks/useAudio'
+import { useTranslation } from '@/i18n/provider'
 
 interface StudentRecord { id: string; name: string; grade: string; level: string; parentContact1: string; status: string; isSelfPickup: boolean }
 interface TripRecord { id: string; status: string }
 interface EmergencyRecord { id: string; timestamp: string; latitude?: number; longitude?: number; driver?: { name: string; phone?: string } }
 
 export default function OverviewTab({ currentUserRole }: { currentUserRole: string }) {
+    const { t } = useTranslation()
     const [students, setStudents] = useState<StudentRecord[]>([])
     const [trips, setTrips] = useState<TripRecord[]>([])
     const [pickupTimes, setPickupTimes] = useState('')
@@ -187,7 +189,7 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                             <motion.span animate={{ scale: [1, 1.25, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ display: 'flex' }}>
                                 <AlertTriangle size={24} color="#ef4444" />
                             </motion.span>
-                            ACTIVE EMERGENCIES ({emergencies.length})
+                            {t('overview.activeEmergencies')} ({emergencies.length})
                         </h2>
                         <div style={{ display: 'grid', gap: '1rem' }}>
                             {emergencies.map(e => (
@@ -216,10 +218,10 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
             {/* Quick Stats - Bento Grid */}
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="bento-grid" style={{ marginBottom: '2.5rem' }}>
                 {[
-                    { icon: <GraduationCap size={24}/>, label: 'Total Students',     val: students.length,                    color: 'var(--primary)' },
-                    { icon: <CheckCircle size={24}/>, label: 'Checked In',         val: presentStudents,                    color: 'var(--success)' },
-                    { icon: <Bus size={24}/>, label: 'Active Trips',       val: activeTrips,                        color: 'var(--bus-yellow)' },
-                    { icon: <AlertTriangle size={24}/>, label: 'Open Emergencies',   val: emergencies.length,                  color: 'var(--danger)' },
+                    { icon: <GraduationCap size={24}/>, label: t('overview.totalStudents'),     val: students.length,                    color: 'var(--primary)' },
+                    { icon: <CheckCircle size={24}/>, label: t('overview.checkedIn'),         val: presentStudents,                    color: 'var(--success)' },
+                    { icon: <Bus size={24}/>, label: t('overview.activeTrips'),         val: activeTrips,                        color: 'var(--bus-yellow)' },
+                    { icon: <AlertTriangle size={24}/>, label: t('overview.openEmergencies'),     val: emergencies.length,                  color: emergencies.length > 0 ? 'var(--danger)' : 'var(--text-muted)' },
                 ].map(({ icon, label, val, color }) => (
                     <motion.div key={label} variants={cardVariants} className="bento-card"
                         style={{ textAlign: 'center', justifyContent: 'center' }}>
@@ -236,10 +238,10 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                 {/* Settings panel — admin/school-admin only (NOT super admin who has org-level view) */}
                 {(currentUserRole === 'ADMIN' || currentUserRole === 'SCHOOL_ADMIN') && (
                     <motion.div variants={cardVariants} className="bento-card" style={{ padding: '2rem', alignSelf: 'start' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><Settings size={18} /> Organisation Settings</h3>
+                        <h3 style={{ marginTop: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><Settings size={18} /> {t('overview.orgSettings')}</h3>
 
                         <div className="input-group">
-                            <label className="input-label">Organisation Name</label>
+                            <label className="input-label">{t('overview.schoolName')}</label>
                             <input type="text" className="input-field" value={schoolName}
                                 minLength={3} maxLength={100}
                                 onChange={e => { isEditingRef.current = true; setSchoolName(e.target.value) }}
@@ -249,7 +251,7 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">Available Pickup Times</label>
+                            <label className="input-label">{t('overview.pickupTimes')}</label>
                             <input type="text" className="input-field" value={pickupTimes}
                                 onChange={e => { isEditingRef.current = true; setPickupTimes(e.target.value) }} placeholder="e.g. 3:00 PM, 4:00 PM" />
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>Comma-separated list of times</div>
@@ -269,7 +271,7 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                         </div>
 
                         <div className="input-group">
-                            <label className="input-label">Geofence Radius (metres)</label>
+                            <label className="input-label">{t('overview.geofenceRadius')}</label>
                             <input type="text" inputMode="decimal" className="input-field" value={geofenceRadius}
                                 onChange={e => { isEditingRef.current = true; setGeofenceRadius(e.target.value) }} placeholder="500" />
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>

@@ -52,7 +52,7 @@ type SidebarGroup = { label: string; items: { id: string; icon: LucideIcon; labe
 function buildSidebarGroups(t: (k: string) => string): SidebarGroup[] {
   return [
     {
-      label: 'OPERATIONS',
+      label: t('nav.groupOperations'),
       items: [
         { id: 'OVERVIEW',    icon: LayoutDashboard, label: t('nav.overview') },
         { id: 'FLEET',       icon: Bus,             label: t('nav.fleet') },
@@ -64,7 +64,7 @@ function buildSidebarGroups(t: (k: string) => string): SidebarGroup[] {
       ],
     },
     {
-      label: 'MANAGEMENT',
+      label: t('nav.groupManagement'),
       items: [
         { id: 'USERS',         icon: Users2,    label: t('nav.users') },
         { id: 'MAINTENANCE',   icon: Wrench,    label: t('nav.maintenance') },
@@ -73,12 +73,12 @@ function buildSidebarGroups(t: (k: string) => string): SidebarGroup[] {
       ],
     },
     {
-      label: 'INTELLIGENCE',
+      label: t('nav.groupIntelligence'),
       items: [
         { id: 'ANALYTICS', icon: TrendingUp,    label: t('nav.analytics') },
-        { id: 'OPTIMIZE',  icon: Sparkles,      label: 'AI Optimize' },
+        { id: 'OPTIMIZE',  icon: Sparkles,      label: t('nav.aiOptimize') },
         { id: 'MESSAGES',  icon: MessageSquare, label: t('nav.messages') },
-        { id: 'CALENDAR',  icon: Bell,          label: 'Academic Calendar' },
+        { id: 'CALENDAR',  icon: Bell,          label: t('nav.academicCalendar') },
       ],
     },
   ]
@@ -110,6 +110,7 @@ function SidebarItem({ icon: Icon, label, active, onClick }: {
 export default function AdminDashboard() {
   const [activeTab, setActiveTab]             = useState('OVERVIEW')
   const [searchQuery, setSearchQuery]         = useState('')
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [currentUserRole, setCurrentUserRole] = useState<string>('')
   const [userName, setUserName]               = useState<string>('')
   const [loading, setLoading]                 = useState(true)
@@ -127,12 +128,12 @@ export default function AdminDashboard() {
     LIVETRIPS: t('nav.liveTrips'), SCHEDULE: t('nav.schedule'), HISTORY: t('nav.history'),
     USERS: t('nav.users'), MAINTENANCE: t('nav.maintenance'), LOSTFOUND: t('nav.lostFound'),
     ANNOUNCEMENTS: t('nav.announcements'), ANALYTICS: t('nav.analytics'),
-    OPTIMIZE: 'AI Route Optimizer', MESSAGES: t('nav.messages'), CALENDAR: 'Academic Calendar',
-    ORGANIZATIONS: 'Organisations',
+    OPTIMIZE: t('nav.aiOptimize'), MESSAGES: t('nav.messages'), CALENDAR: t('nav.academicCalendar'),
+    ORGANIZATIONS: t('nav.organisations'),
   }
   const SUPER_ADMIN_ITEMS: { id: string; icon: LucideIcon; label: string }[] = [
-    { id: 'ORGANIZATIONS', icon: Building2,   label: 'Organisations' },
-    { id: 'SUPERUSERS',    icon: ShieldCheck, label: 'All Users (Global)' },
+    { id: 'ORGANIZATIONS', icon: Building2,   label: t('nav.organisations') },
+    { id: 'SUPERUSERS',    icon: ShieldCheck, label: t('nav.allUsersGlobal') },
   ]
 
   useEffect(() => {
@@ -314,32 +315,94 @@ export default function AdminDashboard() {
             </h2>
           </div>
 
-          {/* Search — desktop only. Live-filters the list on the tabs that support it
-              (Students, Users, Fleet & Routes); shows as a plain (disabled) box elsewhere
-              so it never looks functional where it isn't wired yet. */}
+          {/* Global Search Bar */}
           {!isMobile && (() => {
             const searchable = ['STUDENTS', 'USERS', 'SUPERUSERS', 'FLEET'].includes(activeTab)
+            
+            // Generate quick jump suggestions if query matches any tab label
+            const jumpSuggestions = searchQuery 
+              ? Object.entries(TAB_LABELS)
+                  .filter(([_, label]) => label.toLowerCase().includes(searchQuery.toLowerCase()) && !searchable)
+                  .slice(0, 3)
+              : []
+
             return (
-              <div style={{
-                marginLeft: 'auto',
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '9px 14px',
-                background: HC.surface, border: `1px solid ${HC.line}`,
-                borderRadius: HC.pill, width: 220,
-              }}>
-                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={HC.text3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-                </svg>
-                {searchable ? (
+              <div style={{ position: 'relative', marginLeft: 'auto' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '9px 14px',
+                  background: HC.surface, border: `1px solid ${isSearchFocused ? HC.yellow : HC.line}`,
+                  borderRadius: HC.pill, width: 220, transition: 'all 0.2s ease',
+                  boxShadow: isSearchFocused ? `0 0 0 2px ${HC.yellow}33` : 'none'
+                }}>
+                  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={isSearchFocused ? HC.yellow : HC.text3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                  </svg>
                   <input
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder={t('common.search')}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                    placeholder={searchable ? `${t('common.search')} ${TAB_LABELS[activeTab]}...` : t('common.search')}
                     style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 13, color: HC.text, fontFamily: 'inherit' }}
                   />
-                ) : (
-                  <span style={{ fontSize: 13, color: HC.text3 }}>{t('common.search')}</span>
-                )}
+                </div>
+
+                {/* Global Search Dropdown */}
+                <AnimatePresence>
+                  {isSearchFocused && searchQuery && !searchable && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                      style={{
+                        position: 'absolute', top: '100%', right: 0, marginTop: 8,
+                        background: HC.surface, border: `1px solid ${HC.line}`, borderRadius: 12,
+                        width: 260, zIndex: 100, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                      }}
+                    >
+                      <div style={{ padding: '8px 12px', fontSize: 11, fontWeight: 600, color: HC.text3, borderBottom: `1px solid ${HC.lineStrong}` }}>
+                        Global Search Options
+                      </div>
+                      <div style={{ padding: '4px' }}>
+                        <button
+                          onClick={() => { setActiveTab('STUDENTS'); setSearchQuery(searchQuery); }}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', color: HC.text, fontSize: 13, cursor: 'pointer', borderRadius: 8 }}
+                          onMouseOver={e => e.currentTarget.style.background = HC.lineStrong}
+                          onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          Search <span style={{ color: HC.yellow }}>&quot;{searchQuery}&quot;</span> in <strong>Students</strong>
+                        </button>
+                        <button
+                          onClick={() => { setActiveTab('USERS'); setSearchQuery(searchQuery); }}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', color: HC.text, fontSize: 13, cursor: 'pointer', borderRadius: 8 }}
+                          onMouseOver={e => e.currentTarget.style.background = HC.lineStrong}
+                          onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          Search <span style={{ color: HC.yellow }}>&quot;{searchQuery}&quot;</span> in <strong>Users</strong>
+                        </button>
+                        <button
+                          onClick={() => { setActiveTab('FLEET'); setSearchQuery(searchQuery); }}
+                          style={{ width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', color: HC.text, fontSize: 13, cursor: 'pointer', borderRadius: 8 }}
+                          onMouseOver={e => e.currentTarget.style.background = HC.lineStrong}
+                          onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                          Search <span style={{ color: HC.yellow }}>&quot;{searchQuery}&quot;</span> in <strong>Fleet</strong>
+                        </button>
+                        
+                        {jumpSuggestions.map(([id, label]) => (
+                           <button
+                             key={id}
+                             onClick={() => { setActiveTab(id); setSearchQuery(''); }}
+                             style={{ width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', color: HC.text, fontSize: 13, cursor: 'pointer', borderRadius: 8 }}
+                             onMouseOver={e => e.currentTarget.style.background = HC.lineStrong}
+                             onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                           >
+                             Jump to <strong>{label}</strong>
+                           </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )
           })()}

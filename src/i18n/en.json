@@ -16,7 +16,40 @@
     "maintenance": "Maintenance",
     "announcements": "Announcements",
     "profile": "Profile",
-    "billing": "Billing"
+    "billing": "Billing",
+    "groupOperations": "OPERATIONS",
+    "groupManagement": "MANAGEMENT",
+    "groupIntelligence": "INTELLIGENCE",
+    "superAdmin": "SUPER ADMIN",
+    "aiOptimize": "AI Route Optimizer",
+    "academicCalendar": "Academic Calendar",
+    "organisations": "Organisations",
+    "allUsersGlobal": "All Users (Global)"
+  },
+  "overview": {
+    "totalStudents": "Total Students",
+    "checkedIn": "Checked In",
+    "activeTrips": "Active Trips",
+    "openEmergencies": "Open Emergencies",
+    "activeEmergencies": "ACTIVE EMERGENCIES",
+    "orgSettings": "Organisation Settings",
+    "schoolName": "School Name",
+    "pickupTimes": "Pickup Times",
+    "geofenceRadius": "Geofence Radius (m)",
+    "quickSettings": "Quick Settings"
+  },
+  "analytics": {
+    "title": "Data Analytics",
+    "onTimeRate": "On-Time Rate",
+    "avgDelay": "Avg Delay",
+    "fuelSaved": "Fuel Saved",
+    "totalDistance": "Total Distance",
+    "studentAttendance": "Student Attendance",
+    "routeEfficiency": "Route Efficiency",
+    "maintenanceCosts": "Maintenance Costs",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
   },
   "common": {
     "loading": "Loading...",
