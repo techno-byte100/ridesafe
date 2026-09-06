@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Pencil, Trash2, X } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Bus, Plus, Pencil, Trash2, MapPin, Settings2 } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 const defaultBusForm = { plateNumber: '', capacity: '30', driverId: '', routeId: '', wialonUnitId: '', katsanaVehicleId: '' }
 const defaultRouteForm = { name: '', morningTime: '7:30 AM', afternoonTime: '3:00 PM' }
 
 export default function FleetTab({ searchQuery = '' }: { searchQuery?: string }) {
+    const { t } = useTranslation()
     const [buses, setBuses] = useState<any[]>([])
     const [routes, setRoutes] = useState<any[]>([])
     const [drivers, setDrivers] = useState<any[]>([])

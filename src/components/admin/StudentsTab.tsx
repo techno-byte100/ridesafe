@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertTriangle, UserPlus, Bus, Check, X, Download, Plus, Pencil, Trash2 } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { useTranslation } from '@/i18n/provider'
 
 interface Student {
   id: string; name: string; grade: string; level: string;
@@ -43,6 +44,7 @@ function validateStudentForm(form: typeof defaultForm): Record<string, string> {
 }
 
 export default function StudentsTab({ searchQuery = '' }: { searchQuery?: string }) {
+  const { t } = useTranslation()
   const [students, setStudents] = useState<Student[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
@@ -218,21 +220,21 @@ export default function StudentsTab({ searchQuery = '' }: { searchQuery?: string
       <div className="glass-panel" style={{ padding:'2rem' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' }}>
           <div>
-            <h3 style={{ margin:0, fontSize:'1.3rem' }}>Student Roster</h3>
-            <div style={{ fontSize:'0.85rem', color:'var(--text-muted)', marginTop:4 }}>{students.length} students enrolled</div>
+            <h3 style={{ margin:0, fontSize:'1.3rem' }}>{t('admin.studentRoster')}</h3>
+            <div style={{ fontSize:'0.85rem', color:'var(--text-muted)', marginTop:4 }}>{students.length} {t('nav.students')} enrolled</div>
           </div>
           <div style={{ display:'flex', gap:'0.75rem', flexWrap:'wrap' }}>
             <button className="btn" style={{ background:'rgba(255,255,255,0.06)', border:'1px solid var(--surface-border)', display:'flex', alignItems:'center', gap:6 }}
               onClick={exportCSV}>
-              <Download size={16}/> Export CSV
+              <Download size={16}/> {t('admin.exportCSV')}
             </button>
             <button className="btn" style={{ background:'rgba(255,255,255,0.06)', border:'1px solid var(--surface-border)', display:'flex', alignItems:'center', gap:6 }}
               onClick={exportPDF}>
-              <Download size={16}/> Export PDF
+              <Download size={16}/> {t('admin.exportPDF')}
             </button>
             <motion.button whileHover={{ scale:1.04 }} whileTap={{ scale:0.96 }}
               className="btn btn-primary" onClick={openAddModal} style={{ display:'flex', alignItems:'center', gap:6 }}>
-              <Plus size={16}/> Add Student
+              <Plus size={16}/> {t('admin.addStudent')}
             </motion.button>
           </div>
         </div>

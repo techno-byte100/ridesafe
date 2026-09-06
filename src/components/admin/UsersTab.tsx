@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, AlertTriangle, UserPlus, Bus, AlertCircle, Pencil, Trash2 } from 'lucide-react'
+import { CheckCircle, AlertTriangle, UserPlus, AlertCircle, Pencil, Trash2, ShieldCheck } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface User { id: string; name: string; email: string; role: string; phone?: string; buses?: { plateNumber: string }[]; organizationId?: string }
 interface Org { id: string; name: string }
@@ -31,9 +32,6 @@ function validateForm(form: typeof defaultForm, isEdit = false): Record<string, 
   return errs
 }
 
-// Hoisted to module scope — defining this inside UsersTab's render body would give it a new
-// function identity every render, making React treat it as a different component type and
-// remount (and lose focus on) every wrapped input on each keystroke.
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="input-group" style={{ marginBottom: 0 }}>
@@ -44,7 +42,8 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   )
 }
 
-export default function UsersTab({ superAdminView = false, searchQuery = '' }: { superAdminView?: boolean; searchQuery?: string }) {
+export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }: { searchQuery?: string; currentUserRole?: string }) {
+  const { t } = useTranslation()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [filterRole, setFilterRole] = useState('ALL')
@@ -197,8 +196,12 @@ export default function UsersTab({ superAdminView = false, searchQuery = '' }: {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h3 style={{ margin: 0 }}>{superAdminView ? 'All System Users (Global)' : 'System Users'}</h3>
-            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 4 }}>{users.length} users registered</div>
+            <h3 style={{ margin: 0, fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ShieldCheck size={20} color="var(--primary)" /> {t('nav.users')} Directory
+            </h3>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              {users.length} {t('nav.users').toLowerCase()}
+            </div>
           </div>
           <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
             className="btn btn-primary" onClick={openAddModal}>
