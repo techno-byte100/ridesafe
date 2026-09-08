@@ -147,7 +147,16 @@ export default function AdminDashboard() {
     fetch('/api/auth/me')
       .then(res => { if (!res.ok) throw new Error('Unauthorized'); return res.json() })
       .then(data => {
-        setCurrentUserRole(data.user?.role || '')
+        const role = data.user?.role
+        if (role === 'SUPER_ADMIN') {
+          router.push('/super-admin')
+          return
+        }
+        if (role === 'SCHOOL_ADMIN') {
+          router.push('/school-admin')
+          return
+        }
+        setCurrentUserRole(role || '')
         setUserName(data.user?.name || 'Admin')
         setLoading(false)
       })

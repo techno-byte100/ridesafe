@@ -50,7 +50,11 @@ export default function LoginPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || t('auth.invalidCredentials'))
       const role = data.user.role
-      if (role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'SCHOOL_ADMIN') {
+      if (role === 'SUPER_ADMIN') {
+        router.push('/super-admin')
+      } else if (role === 'SCHOOL_ADMIN') {
+        router.push('/school-admin')
+      } else if (role === 'ADMIN') {
         router.push('/admin')
       } else if (role === 'DRIVER') {
         router.push('/driver')
