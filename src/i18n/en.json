@@ -404,7 +404,19 @@
     "flushCache": "Flush Telemetry Cache",
     "dataExport": "Cross-Tenant Data Export",
     "quotaLimits": "Resource Quotas",
-    "subscriptionTier": "Subscription Tier"
+    "subscriptionTier": "Subscription Tier",
+    "students": "Students & Enrolment",
+    "enrollStudent": "Enroll Student",
+    "editStudent": "Edit Student",
+    "linkParent": "Link Parent Account",
+    "assignRoute": "Assign Bus Route",
+    "boardingStatus": "Boarding Acknowledgment",
+    "onBoard": "On Board",
+    "droppedOff": "Dropped Off",
+    "parentConfirmed": "Parent Confirmed",
+    "driverConfirmed": "Driver Confirmed",
+    "busApproaching": "Bus Approaching Stop"
   }
 }
+
 

@@ -404,7 +404,19 @@
     "flushCache": "Kosongkan Cache Telemetri",
     "dataExport": "Eksport Data Rentas Penyewa",
     "quotaLimits": "Kuota Sumber",
-    "subscriptionTier": "Peringkat Langganan"
+    "subscriptionTier": "Peringkat Langganan",
+    "students": "Pelajar & Pendaftaran",
+    "enrollStudent": "Daftar Pelajar",
+    "editStudent": "Sunting Pelajar",
+    "linkParent": "Pautkan Akaun Ibu Bapa",
+    "assignRoute": "Tetapkan Laluan Bas",
+    "boardingStatus": "Pengakuan Menaiki Bas",
+    "onBoard": "Di Dalam Bas",
+    "droppedOff": "Telah Diturunkan",
+    "parentConfirmed": "Disahkan Ibu Bapa",
+    "driverConfirmed": "Disahkan Pemandu",
+    "busApproaching": "Bas Menghampiri Perhentian"
   }
 }
+
 

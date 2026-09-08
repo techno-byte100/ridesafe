@@ -167,7 +167,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
       sub: 'Across all organizations',
       icon: GraduationCap,
       color: '#0A84FF',
-      tab: 'ORGANIZATIONS'
+      tab: 'STUDENTS'
     },
     {
       title: 'Live Active Trips',
@@ -235,6 +235,17 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {onNavigateTab && (
             <>
+              <button
+                onClick={() => onNavigateTab('STUDENTS')}
+                style={{
+                  background: '#1C1C21', color: '#FFF',
+                  border: '1px solid #26262C', padding: '10px 18px', borderRadius: 10,
+                  fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6
+                }}
+              >
+                <GraduationCap size={16} color="#FFD60A" /> Students Roster
+              </button>
               <button
                 onClick={() => onNavigateTab('ANALYTICS')}
                 style={{

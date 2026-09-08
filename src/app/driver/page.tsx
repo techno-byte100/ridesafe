@@ -94,7 +94,7 @@ export default function DriverDashboard() {
   const tripTimer = useTripTimer(tripStartedAt)
 
   // Audio Hooks & Pre-Unlock State
-  const [appUnlocked, setAppUnlocked] = useState(false)
+  const [appUnlocked, setAppUnlocked] = useState(true)
   const { play: playAlert } = useAudio('/alert toon.mp3')
   const { play: playHorn } = useAudio('/bus-horn.mp3')
 
@@ -611,25 +611,6 @@ export default function DriverDashboard() {
         )
       })()}
 
-      <AnimatePresence>
-        {!appUnlocked && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" style={{ zIndex: 10000 }}>
-            <div className="modal-box" style={{ textAlign: 'center' }}>
-               <div style={{ marginBottom:'1rem', display:'flex', justifyContent:'center' }}><Info size={48} color="var(--primary)"/></div>
-               <h2>Driver Workspace Setup</h2>
-               <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                 Please verify audio alerts to initiate live bus mode tracking mapping.
-               </p>
-               <button onClick={() => { playHorn(); setAppUnlocked(true); }} className="btn btn-primary" style={{ width: '100%' }}>
-                 Initialize Audio Context
-               </button>
-               <button onClick={() => setAppUnlocked(true)} style={{ background:'none', border:'none', color:'var(--text-muted)', fontSize:'0.85rem', marginTop:'1rem', cursor:'pointer', textDecoration:'underline' }}>
-                 Skip — I&apos;ll turn on audio alerts later
-               </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Camera Capture Overlay */}
       <CameraCapture
