@@ -27,6 +27,8 @@ export async function GET() {
     if (!auth || auth.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const { ensureSuperAdminSchema } = await import('@/lib/db/ensureSchema')
+    await ensureSuperAdminSchema()
     const orgs = await prisma.organization.findMany({
       include: {
         _count: { select: { users: true, students: true, buses: true, routes: true } }

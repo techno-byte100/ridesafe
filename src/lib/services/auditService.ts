@@ -58,32 +58,41 @@ export async function getAuditLogs({
   from?: Date
   to?: Date
 }) {
-  const where: Record<string, unknown> = {}
+  try {
+    const { ensureSuperAdminSchema } = await import('@/lib/db/ensureSchema')
+    await ensureSuperAdminSchema()
 
-  if (userId) where.userId = userId
-  if (action) where.action = action
-  if (target) where.target = target
-  if (from || to) {
-    where.createdAt = {
-      ...(from ? { gte: from } : {}),
-      ...(to ? { lte: to } : {}),
+    const where: Record<string, unknown> = {}
+
+    if (userId) where.userId = userId
+    if (action) where.action = action
+    if (target) where.target = target
+    if (from || to) {
+      where.createdAt = {
+        ...(from ? { gte: from } : {}),
+        ...(to ? { lte: to } : {}),
+      }
     }
-  }
 
-  const [logs, total] = await Promise.all([
-    prisma.auditLog.findMany({
-      where,
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, role: true },
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, role: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.auditLog.count({ where }),
-  ])
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.auditLog.count({ where }),
+    ])
 
-  return { logs, total, page, limit, totalPages: Math.ceil(total / limit) }
+    return { logs, total, page, limit, totalPages: Math.ceil(total / limit) }
+  } catch (err) {
+    console.warn('[AuditLog] Notice in getAuditLogs:', err)
+    return { logs: [], total: 0, page: 1, limit, totalPages: 0 }
+  }
 }
+

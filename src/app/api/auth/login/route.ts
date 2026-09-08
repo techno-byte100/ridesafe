@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { signToken } from '@/lib/auth/auth'
 import { cookies } from 'next/headers'
 import { loginSchema, validateBody } from '@/lib/core/validation'
+import { ensureSuperAdminSchema } from '@/lib/db/ensureSchema'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,20 @@ export async function POST(req: NextRequest) {
     }
     const { email, password } = validation.data
 
-    let user = await prisma.user.findUnique({ where: { email } })
+    // Auto-sync Super Admin schema columns/tables on live DB if needed
+    await ensureSuperAdminSchema()
+
+    // Explicit select to avoid querying columns that might be pending on database
+    let user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        password: true,
+      }
+    })
 
     // If demo account doesn't exist yet on this database, auto-provision it with standard seed password
     if (!user && password === 'password123') {
@@ -36,6 +50,13 @@ export async function POST(req: NextRequest) {
             name: DEMO_USERS[email].name,
             role: DEMO_USERS[email].role,
             password: passwordHash,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            password: true,
           }
         })
       }
@@ -53,8 +74,13 @@ export async function POST(req: NextRequest) {
 
     const token = await signToken({ id: user.id, role: user.role })
 
-    // Update lastLoginAt (fire-and-forget)
-    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
+    // Update lastLoginAt safely (fire-and-forget, never throws)
+    prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() }
+    }).catch(err => {
+      console.warn('[Login] lastLoginAt update skipped:', err?.message)
+    })
 
     // Set cookie
     const cookieStore = await cookies()

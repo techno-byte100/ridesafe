@@ -13,20 +13,40 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                phone: true,
-                organizationId: true,
-                lastLoginAt: true,
-                createdAt: true,
-                buses: { select: { id: true, plateNumber: true } }
-            },
-            orderBy: { createdAt: 'desc' }
-        })
+        const { ensureSuperAdminSchema } = await import('@/lib/db/ensureSchema')
+        await ensureSuperAdminSchema()
+
+        let users;
+        try {
+            users = await prisma.user.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    phone: true,
+                    organizationId: true,
+                    lastLoginAt: true,
+                    createdAt: true,
+                    buses: { select: { id: true, plateNumber: true } }
+                },
+                orderBy: { createdAt: 'desc' }
+            })
+        } catch {
+            users = await prisma.user.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    phone: true,
+                    organizationId: true,
+                    createdAt: true,
+                    buses: { select: { id: true, plateNumber: true } }
+                },
+                orderBy: { createdAt: 'desc' }
+            })
+        }
 
         return NextResponse.json({ users })
     } catch (error) {
