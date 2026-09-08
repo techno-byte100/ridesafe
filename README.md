@@ -5,7 +5,10 @@ real time, managing student attendance and pickup/drop-off, handling
 parent registration and billing, and giving school admins a single
 dashboard to run their fleet.
 
-Live at **[ridesafe.com.my](https://ridesafe.com.my)**.
+## Deployment Environments
+
+- **Main Branch**: The `main` branch is deployed via Vercel and represents the stable production application.
+- **Testing Branch**: The `testing` branch is deployed via Vercel and is used for testing new feature implementations before they are merged into the stable application.
 
 ## Features
 

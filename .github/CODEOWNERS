@@ -1,0 +1,10 @@
+# ==============================================================================
+# GitHub Code Owners Configuration
+# ==============================================================================
+
+# 🛡️ SUPER ADMIN MODULE — STRICTLY LOCKED
+# Only @techno-byte100 and @Sakthi-m35 can touch, edit, or approve changes to Super Admin.
+# All other folders (driver, parent, school-admin, admin) can be freely edited by your teammates.
+
+src/app/super-admin/            @techno-byte100 @Sakthi-m35
+src/components/super-admin/     @techno-byte100 @Sakthi-m35

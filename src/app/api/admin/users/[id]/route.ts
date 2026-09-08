@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db/prisma'
 import { getUserFromSession } from '@/lib/auth/auth'
 import bcrypt from 'bcryptjs'
+import { logAudit } from '@/lib/services/auditService'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +87,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       select: { id: true, name: true, email: true, role: true, phone: true, organizationId: true }
     })
 
+    logAudit({ userId: auth.id, action: 'UPDATE_USER', target: 'User', targetId: id, details: updates })
     return NextResponse.json({ user })
   } catch (error) {
     console.error('User update error:', error)
@@ -114,6 +116,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
 
     await prisma.user.delete({ where: { id } })
+    logAudit({ userId: auth.id, action: 'DELETE_USER', target: 'User', targetId: id, details: { name: existing.name, email: existing.email } })
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
     const code = (error as { code?: string })?.code

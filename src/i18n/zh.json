@@ -391,5 +391,32 @@
     "english": "English",
     "malay": "Bahasa Malaysia",
     "chinese": "中文"
+  },
+  "superAdmin": {
+    "title": "超级管理员控制台",
+    "overview": "平台概览",
+    "schools": "学校与租户",
+    "users": "全平台用户名录",
+    "analytics": "全局数据分析",
+    "auditLog": "安全审计追踪",
+    "settings": "开发者与系统设置",
+    "maintenance": "全平台维护锁定",
+    "flushCache": "清除遥测缓存",
+    "dataExport": "跨租户数据导出",
+    "quotaLimits": "资源配额",
+    "subscriptionTier": "订阅级别",
+    "students": "学生名录与分配",
+    "enrollStudent": "登记学生",
+    "editStudent": "编辑学生",
+    "linkParent": "关联家长账户",
+    "assignRoute": "分配校车路线",
+    "boardingStatus": "乘车登车确认",
+    "onBoard": "已上车",
+    "droppedOff": "已安全送达",
+    "parentConfirmed": "家长已确认",
+    "driverConfirmed": "司机已确认",
+    "busApproaching": "校车即将到达站点"
   }
 }
+
+

@@ -391,5 +391,32 @@
     "english": "English",
     "malay": "Bahasa Malaysia",
     "chinese": "中文"
+  },
+  "superAdmin": {
+    "title": "Super Admin Console",
+    "overview": "Platform Overview",
+    "schools": "Schools & Tenants",
+    "users": "Global User Directory",
+    "analytics": "Global Analytics",
+    "auditLog": "Security Audit Trail",
+    "settings": "Developer & System Settings",
+    "maintenance": "Global Maintenance Lock",
+    "flushCache": "Flush Telemetry Cache",
+    "dataExport": "Cross-Tenant Data Export",
+    "quotaLimits": "Resource Quotas",
+    "subscriptionTier": "Subscription Tier",
+    "students": "Students & Enrolment",
+    "enrollStudent": "Enroll Student",
+    "editStudent": "Edit Student",
+    "linkParent": "Link Parent Account",
+    "assignRoute": "Assign Bus Route",
+    "boardingStatus": "Boarding Acknowledgment",
+    "onBoard": "On Board",
+    "droppedOff": "Dropped Off",
+    "parentConfirmed": "Parent Confirmed",
+    "driverConfirmed": "Driver Confirmed",
+    "busApproaching": "Bus Approaching Stop"
   }
 }
+
+

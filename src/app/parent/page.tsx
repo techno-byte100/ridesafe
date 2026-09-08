@@ -84,7 +84,7 @@ export default function ParentDashboard() {
   const showProfileNotice = (msg: string) => { setProfileNotice(msg); setTimeout(() => setProfileNotice(''), 3000) }
 
   // App Unlock & Audio State
-  const [appUnlocked, setAppUnlocked] = useState(false)
+  const [appUnlocked, setAppUnlocked] = useState(true)
   const { play: playAlert, isReady: isAlertReady } = useAudio('/alert toon.mp3')
   const { play: playHorn, isReady: isHornReady } = useAudio('/bus-horn.mp3')
 
@@ -327,25 +327,6 @@ export default function ParentDashboard() {
     { key:'PROFILE',   label: t('nav.profile'),   icon:(c:string)=><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
   ] as const
 
-  if (!appUnlocked) {
-    return (
-      <div style={{ height:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'var(--bg-color)' }}>
-         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>️</div>
-            <h1 style={{ color: '#fff', fontSize: '1.75rem', marginBottom: '0.5rem' }}>Secure Setup</h1>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', maxWidth: '280px', margin: '0 auto 2.5rem auto', lineHeight: '1.5' }}>
-              We need your permission to enable real-time tracking audio alerts.
-            </p>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-               onClick={() => { playHorn(); setAppUnlocked(true); }}
-               disabled={!isAlertReady || !isHornReady}
-               className="btn btn-primary" style={{ padding: '1rem 3rem', borderRadius: '999px', fontSize: '1.1rem', fontWeight: 700 }}>
-               {(!isAlertReady || !isHornReady) ? t('common.loading') : 'Initialize Tracker'}
-            </motion.button>
-         </motion.div>
-      </div>
-    )
-  }
 
   return (
     <div className="mobile-wrapper">

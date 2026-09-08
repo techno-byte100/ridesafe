@@ -6,7 +6,7 @@
 // ── Auth Tests ───────────────────────────────────────────────────────────────
 
 // We can't directly import signToken/verifyToken because they depend on jose
-// which uses node crypto. So we test the validation layer thoroughly instead.
+// which uhses node crypto. So we test the validation layer thoroughly instead.
 
 import {
   loginSchema,
