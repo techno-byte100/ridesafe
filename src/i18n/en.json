@@ -391,5 +391,20 @@
     "english": "English",
     "malay": "Bahasa Malaysia",
     "chinese": "中文"
+  },
+  "superAdmin": {
+    "title": "Super Admin Console",
+    "overview": "Platform Overview",
+    "schools": "Schools & Tenants",
+    "users": "Global User Directory",
+    "analytics": "Global Analytics",
+    "auditLog": "Security Audit Trail",
+    "settings": "Developer & System Settings",
+    "maintenance": "Global Maintenance Lock",
+    "flushCache": "Flush Telemetry Cache",
+    "dataExport": "Cross-Tenant Data Export",
+    "quotaLimits": "Resource Quotas",
+    "subscriptionTier": "Subscription Tier"
   }
 }
+

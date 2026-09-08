@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Building2, Users, Bus, GraduationCap, Activity, ShieldCheck, 
-  Server, Database, Wifi, AlertTriangle, CheckCircle, ArrowRight
+  Server, Database, Wifi, AlertTriangle, CheckCircle, ArrowRight,
+  FileText, BarChart3, RefreshCw, Clock, ExternalLink
 } from 'lucide-react'
 import { useTranslation } from '@/i18n/provider'
 
@@ -24,6 +25,25 @@ interface EmergencyRecord {
   driver?: { name: string; phone?: string }
 }
 
+interface AuditLogRecord {
+  id: string
+  action: string
+  target?: string
+  createdAt: string
+  user?: { name: string; email: string }
+}
+
+interface HealthCheckData {
+  status: string
+  checks: {
+    database: { status: string; latencyMs: number; engine?: string }
+    redis: { status: string; latencyMs: number; type?: string }
+    rbac: { status: string; mode?: string }
+    gpsIngestion: { status: string; activePort?: string }
+  }
+  maintenanceMode?: boolean
+}
+
 export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab?: (tab: string) => void }) {
   const { t } = useTranslation()
   const [stats, setStats] = useState<SystemStats>({
@@ -35,6 +55,8 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
     activeTrips: 0
   })
   const [emergencies, setEmergencies] = useState<EmergencyRecord[]>([])
+  const [recentLogs, setRecentLogs] = useState<AuditLogRecord[]>([])
+  const [health, setHealth] = useState<HealthCheckData | null>(null)
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
@@ -52,7 +74,9 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
         fetch('/api/admin/users').then(r => r.ok ? r.json() : { users: [] }).catch(() => ({ users: [] })),
         fetch('/api/students').then(r => r.ok ? r.json() : { students: [] }).catch(() => ({ students: [] })),
         fetch('/api/trips').then(r => r.ok ? r.json() : { trips: [] }).catch(() => ({ trips: [] })),
-        fetch('/api/emergency').then(r => r.ok ? r.json() : { alerts: [] }).catch(() => ({ alerts: [] }))
+        fetch('/api/emergency').then(r => r.ok ? r.json() : { alerts: [] }).catch(() => ({ alerts: [] })),
+        fetch('/api/admin/audit-log?limit=6').then(r => r.ok ? r.json() : { logs: [] }).catch(() => ({ logs: [] })),
+        fetch('/api/admin/health').then(r => r.ok ? r.json() : null).catch(() => null),
       ])
 
       const orgsData = results[0].status === 'fulfilled' ? results[0].value : { organizations: [] }
@@ -60,6 +84,8 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
       const studentsData = results[2].status === 'fulfilled' ? results[2].value : { students: [] }
       const tripsData = results[3].status === 'fulfilled' ? results[3].value : { trips: [] }
       const emergencyData = results[4].status === 'fulfilled' ? results[4].value : { alerts: [] }
+      const logsData = results[5].status === 'fulfilled' ? results[5].value : { logs: [] }
+      const healthData = results[6].status === 'fulfilled' ? results[6].value : null
 
       const orgList = orgsData.organizations || []
       const userList = usersData.users || []
@@ -82,6 +108,8 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
       })
 
       setEmergencies(emergencyData.alerts || [])
+      setRecentLogs(logsData.logs || [])
+      if (healthData) setHealth(healthData)
     } catch (e) {
       console.error(e)
     } finally {
@@ -91,7 +119,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
 
   useEffect(() => {
     loadData()
-    const interval = setInterval(loadData, 8000)
+    const interval = setInterval(loadData, 10000)
     return () => clearInterval(interval)
   }, [])
 
@@ -107,6 +135,13 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
     } catch {
       showToast('Network error', 'error')
     }
+  }
+
+  const getActionBadgeColor = (action: string) => {
+    if (action.startsWith('CREATE') || action.includes('ADD')) return { bg: 'rgba(48,209,88,0.15)', text: '#30D158' }
+    if (action.startsWith('DELETE') || action.includes('REMOVE')) return { bg: 'rgba(255,69,58,0.15)', text: '#FF453A' }
+    if (action.startsWith('UPDATE') || action.includes('TOGGLE')) return { bg: 'rgba(10,132,255,0.15)', text: '#0A84FF' }
+    return { bg: 'rgba(255,214,10,0.15)', text: '#FFD60A' }
   }
 
   const kpis = [
@@ -140,7 +175,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
       sub: `${stats.totalBuses} total buses mapped`,
       icon: Bus,
       color: '#BF5AF2',
-      tab: 'ORGANIZATIONS'
+      tab: 'ANALYTICS'
     },
   ]
 
@@ -197,9 +232,31 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {onNavigateTab && (
             <>
+              <button
+                onClick={() => onNavigateTab('ANALYTICS')}
+                style={{
+                  background: '#1C1C21', color: '#FFF',
+                  border: '1px solid #26262C', padding: '10px 18px', borderRadius: 10,
+                  fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6
+                }}
+              >
+                <BarChart3 size={16} color="#0A84FF" /> Global Analytics
+              </button>
+              <button
+                onClick={() => onNavigateTab('AUDIT_LOG')}
+                style={{
+                  background: '#1C1C21', color: '#FFF',
+                  border: '1px solid #26262C', padding: '10px 18px', borderRadius: 10,
+                  fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6
+                }}
+              >
+                <FileText size={16} color="#FFD60A" /> Security Audit
+              </button>
               <button
                 onClick={() => onNavigateTab('ORGANIZATIONS')}
                 style={{
@@ -210,17 +267,6 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 }}
               >
                 <Building2 size={16} /> Manage Schools
-              </button>
-              <button
-                onClick={() => onNavigateTab('USERS')}
-                style={{
-                  background: '#1C1C21', color: '#FFF',
-                  border: '1px solid #26262C', padding: '10px 18px', borderRadius: 10,
-                  fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 6
-                }}
-              >
-                <Users size={16} /> Global Users
               </button>
             </>
           )}
@@ -282,35 +328,68 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
         gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
         gap: 20
       }}>
-        {/* System Health / Status */}
+        {/* System Health / Status with live checks */}
         <div style={{
           background: '#141417',
           border: '1px solid #26262C',
           borderRadius: 14,
           padding: 22
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <Server size={18} color="#FFD60A" />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
-              Platform Infrastructure Status
-            </h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Server size={18} color="#FFD60A" />
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
+                Platform Infrastructure Status
+              </h3>
+            </div>
+            <button
+              onClick={loadData}
+              title="Refresh status"
+              style={{ background: 'transparent', border: 'none', color: '#A6A6B2', cursor: 'pointer', padding: 4 }}
+            >
+              <RefreshCw size={14} />
+            </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#1C1C21', borderRadius: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Database size={16} color="#30D158" />
-                <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>PostgreSQL Database (Neon)</span>
+                <Database size={16} color={health?.checks?.database?.status === 'operational' ? '#30D158' : '#FF9F0A'} />
+                <div>
+                  <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>PostgreSQL Database (Neon)</span>
+                  {health?.checks?.database?.latencyMs !== undefined && (
+                    <span style={{ fontSize: 11, color: '#6E6E7A', marginLeft: 8 }}>
+                      {health.checks.database.latencyMs}ms
+                    </span>
+                  )}
+                </div>
               </div>
-              <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>Operational</span>
+              <span style={{
+                fontSize: 12,
+                color: health?.checks?.database?.status === 'operational' ? '#30D158' : '#FF9F0A',
+                fontWeight: 600,
+                background: health?.checks?.database?.status === 'operational' ? 'rgba(48,209,88,0.12)' : 'rgba(255,159,10,0.12)',
+                padding: '3px 8px', borderRadius: 6
+              }}>
+                {health?.checks?.database?.status === 'operational' ? 'Operational' : 'Active'}
+              </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#1C1C21', borderRadius: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Wifi size={16} color="#30D158" />
-                <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>Upstash Redis Pub/Sub</span>
+                <div>
+                  <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>Redis Telemetry / PubSub</span>
+                  {health?.checks?.redis?.type && (
+                    <span style={{ fontSize: 11, color: '#6E6E7A', marginLeft: 8 }}>
+                      {health.checks.redis.type}
+                    </span>
+                  )}
+                </div>
               </div>
-              <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>Connected</span>
+              <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>
+                Connected
+              </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#1C1C21', borderRadius: 8 }}>
@@ -318,7 +397,9 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 <ShieldCheck size={16} color="#30D158" />
                 <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>Role-Based Access Control (RBAC)</span>
               </div>
-              <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>Enforced</span>
+              <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>
+                Enforced
+              </span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: '#1C1C21', borderRadius: 8 }}>
@@ -326,7 +407,9 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 <Activity size={16} color="#0A84FF" />
                 <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>GPS Telematics Ingestion Engine</span>
               </div>
-              <span style={{ fontSize: 12, color: '#0A84FF', fontWeight: 600, background: 'rgba(10,132,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>Listening</span>
+              <span style={{ fontSize: 12, color: '#0A84FF', fontWeight: 600, background: 'rgba(10,132,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>
+                Listening
+              </span>
             </div>
           </div>
         </div>
@@ -399,6 +482,76 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
             </div>
           )}
         </div>
+      </div>
+
+      {/* Recent Security & Audit Activity Feed */}
+      <div style={{
+        background: '#141417',
+        border: '1px solid #26262C',
+        borderRadius: 14,
+        padding: 22
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FileText size={18} color="#FFD60A" />
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
+              Recent Security & Administrative Activity
+            </h3>
+          </div>
+          {onNavigateTab && (
+            <button
+              onClick={() => onNavigateTab('AUDIT_LOG')}
+              style={{
+                background: 'transparent', border: 'none',
+                color: '#FFD60A', fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+              }}
+            >
+              View Full Audit Log <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
+
+        {recentLogs.length === 0 ? (
+          <div style={{ padding: '24px 0', textAlign: 'center', color: '#6E6E7A', fontSize: 13 }}>
+            No recent audit log entries recorded yet. Platform actions (user creation, tenant updates) will stream here.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {recentLogs.map(log => {
+              const badge = getActionBadgeColor(log.action)
+              return (
+                <div
+                  key={log.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', background: '#1C1C21', borderRadius: 8,
+                    flexWrap: 'wrap', gap: 8
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 6,
+                      background: badge.bg, color: badge.text, letterSpacing: '0.03em'
+                    }}>
+                      {log.action}
+                    </span>
+                    <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>
+                      {log.target ? `${log.target}` : 'System'}
+                    </span>
+                    <span style={{ fontSize: 12, color: '#A6A6B2' }}>
+                      by {log.user?.name || log.user?.email || 'Administrator'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6E6E7A', fontSize: 11 }}>
+                    <Clock size={12} />
+                    {new Date(log.createdAt).toLocaleString()}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

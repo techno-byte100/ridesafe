@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
 
     const token = await signToken({ id: user.id, role: user.role })
 
+    // Update lastLoginAt (fire-and-forget)
+    prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
+
     // Set cookie
     const cookieStore = await cookies()
     cookieStore.set('token', token, {

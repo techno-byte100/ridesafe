@@ -391,5 +391,20 @@
     "english": "English",
     "malay": "Bahasa Malaysia",
     "chinese": "中文"
+  },
+  "superAdmin": {
+    "title": "超级管理员控制台",
+    "overview": "平台概览",
+    "schools": "学校与租户",
+    "users": "全平台用户名录",
+    "analytics": "全局数据分析",
+    "auditLog": "安全审计追踪",
+    "settings": "开发者与系统设置",
+    "maintenance": "全平台维护锁定",
+    "flushCache": "清除遥测缓存",
+    "dataExport": "跨租户数据导出",
+    "quotaLimits": "资源配额",
+    "subscriptionTier": "订阅级别"
   }
 }
+

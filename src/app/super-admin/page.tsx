@@ -8,11 +8,13 @@ import SuperAdminOverviewTab from '@/components/super-admin/OverviewTab'
 import OrganizationsTab from '@/components/super-admin/OrganizationsTab'
 import SuperUsersTab from '@/components/super-admin/SuperUsersTab'
 import SuperAdminSystemSettingsTab from '@/components/super-admin/SystemSettingsTab'
+import AuditLogTab from '@/components/super-admin/AuditLogTab'
+import GlobalAnalyticsTab from '@/components/super-admin/GlobalAnalyticsTab'
 import { LanguageSwitcher, useTranslation } from '@/i18n/provider'
 import {
   LogOut, Menu, X, ShieldAlert,
   LayoutDashboard, Users2, Building2, ShieldCheck, Settings,
-  ArrowRight, Sparkles, Terminal
+  ArrowRight, Sparkles, Terminal, FileText, BarChart3
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -54,11 +56,14 @@ export default function SuperAdminDashboard() {
   const { t } = useTranslation()
 
   const NAV_ITEMS: NavItem[] = [
-    { id: 'OVERVIEW',      icon: LayoutDashboard, label: 'Platform Overview' },
-    { id: 'ORGANIZATIONS', icon: Building2,       label: 'Schools & Tenants', badge: 'Tenants' },
-    { id: 'USERS',         icon: ShieldCheck,     label: 'Global User Directory', badge: 'RBAC' },
-    { id: 'SETTINGS',      icon: Settings,        label: 'Developer & System Settings' },
+    { id: 'OVERVIEW',      icon: LayoutDashboard, label: t('superAdmin.overview') || 'Platform Overview' },
+    { id: 'ORGANIZATIONS', icon: Building2,       label: t('superAdmin.schools') || 'Schools & Tenants', badge: 'Tenants' },
+    { id: 'USERS',         icon: ShieldCheck,     label: t('superAdmin.users') || 'Global User Directory', badge: 'RBAC' },
+    { id: 'ANALYTICS',     icon: BarChart3,       label: t('superAdmin.analytics') || 'Global Analytics', badge: 'KPIs' },
+    { id: 'AUDIT_LOG',     icon: FileText,        label: t('superAdmin.auditLog') || 'Security Audit Trail', badge: 'Trail' },
+    { id: 'SETTINGS',      icon: Settings,        label: t('superAdmin.settings') || 'Developer & System Settings' },
   ]
+
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 900)
@@ -289,6 +294,12 @@ export default function SuperAdminDashboard() {
           )}
           {activeTab === 'USERS' && (
             <SuperUsersTab currentUserRole="SUPER_ADMIN" />
+          )}
+          {activeTab === 'ANALYTICS' && (
+            <GlobalAnalyticsTab />
+          )}
+          {activeTab === 'AUDIT_LOG' && (
+            <AuditLogTab />
           )}
           {activeTab === 'SETTINGS' && (
             <SuperAdminSystemSettingsTab />

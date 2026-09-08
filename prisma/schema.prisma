@@ -17,6 +17,11 @@ model Organization {
   phone     String?
   logoUrl   String?
   isActive  Boolean  @default(true)
+  // Subscription & Quota fields
+  subscriptionTier String  @default("FREE") // FREE, BASIC, PREMIUM
+  maxBuses         Int     @default(5)
+  maxStudents      Int     @default(100)
+  maxUsers         Int     @default(20)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -44,6 +49,7 @@ model User {
   updatedAt          DateTime      @updatedAt
   deviceId           String?
   locale             String?       @default("en")
+  lastLoginAt        DateTime?
 
   parentStudents   Student[]         @relation("ParentStudents")
   trips            Trip[]            @relation("DriverTrips")
@@ -57,6 +63,7 @@ model User {
   rideRatings      RideRating[]      @relation("ParentRatings")
   lostFoundReports LostFoundItem[]   @relation("LostFoundReports")
   driverShifts     DriverShift[]     @relation("DriverShifts")
+  auditLogs        AuditLog[]        @relation("AuditLogs")
 }
 
 model Student {
@@ -351,4 +358,17 @@ model AcademicEvent {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // CREATE_USER, DELETE_ORG, TOGGLE_MAINTENANCE, etc.
+  target    String?  // target entity type (User, Organization, etc.)
+  targetId  String?  // target entity ID
+  details   String?  // JSON string with additional context
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User @relation("AuditLogs", fields: [userId], references: [id])
 }

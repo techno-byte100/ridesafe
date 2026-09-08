@@ -391,5 +391,20 @@
     "english": "English",
     "malay": "Bahasa Malaysia",
     "chinese": "中文"
+  },
+  "superAdmin": {
+    "title": "Konsol Super Admin",
+    "overview": "Gambaran Keseluruhan Platform",
+    "schools": "Sekolah & Penyewa",
+    "users": "Direktori Pengguna Global",
+    "analytics": "Analitis Global",
+    "auditLog": "Jejak Audit Keselamatan",
+    "settings": "Tetapan Pembangun & Sistem",
+    "maintenance": "Kunci Penyelenggaraan Global",
+    "flushCache": "Kosongkan Cache Telemetri",
+    "dataExport": "Eksport Data Rentas Penyewa",
+    "quotaLimits": "Kuota Sumber",
+    "subscriptionTier": "Peringkat Langganan"
   }
 }
+
