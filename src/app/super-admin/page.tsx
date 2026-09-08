@@ -76,12 +76,7 @@ export default function SuperAdminDashboard() {
       .then(data => {
         const role = data.user?.role
         if (role !== 'SUPER_ADMIN') {
-          // If not super admin, route to their proper dashboard
-          if (role === 'SCHOOL_ADMIN') router.push('/school-admin')
-          else if (role === 'ADMIN') router.push('/admin')
-          else if (role === 'DRIVER') router.push('/driver')
-          else if (role === 'PARENT') router.push('/parent')
-          else router.push('/')
+          router.push('/')
           return
         }
         setCurrentUserRole(role)

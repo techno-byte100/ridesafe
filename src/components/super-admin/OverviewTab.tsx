@@ -47,19 +47,19 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
 
   const loadData = async () => {
     try {
-      const [orgsRes, usersRes, studentsRes, tripsRes, emergencyRes] = await Promise.all([
-        fetch('/api/admin/organizations'),
-        fetch('/api/admin/users'),
-        fetch('/api/students'),
-        fetch('/api/trips'),
-        fetch('/api/emergency')
+      const results = await Promise.allSettled([
+        fetch('/api/admin/organizations').then(r => r.ok ? r.json() : { organizations: [] }).catch(() => ({ organizations: [] })),
+        fetch('/api/admin/users').then(r => r.ok ? r.json() : { users: [] }).catch(() => ({ users: [] })),
+        fetch('/api/students').then(r => r.ok ? r.json() : { students: [] }).catch(() => ({ students: [] })),
+        fetch('/api/trips').then(r => r.ok ? r.json() : { trips: [] }).catch(() => ({ trips: [] })),
+        fetch('/api/emergency').then(r => r.ok ? r.json() : { alerts: [] }).catch(() => ({ alerts: [] }))
       ])
 
-      const orgsData = await orgsRes.json()
-      const usersData = await usersRes.json()
-      const studentsData = await studentsRes.json()
-      const tripsData = await tripsRes.json()
-      const emergencyData = await emergencyRes.json()
+      const orgsData = results[0].status === 'fulfilled' ? results[0].value : { organizations: [] }
+      const usersData = results[1].status === 'fulfilled' ? results[1].value : { users: [] }
+      const studentsData = results[2].status === 'fulfilled' ? results[2].value : { students: [] }
+      const tripsData = results[3].status === 'fulfilled' ? results[3].value : { trips: [] }
+      const emergencyData = results[4].status === 'fulfilled' ? results[4].value : { alerts: [] }
 
       const orgList = orgsData.organizations || []
       const userList = usersData.users || []
