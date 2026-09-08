@@ -128,12 +128,12 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
       const res = await fetch(`/api/emergency/${id}`, { method: 'PATCH' })
       if (res.ok) {
         setEmergencies(prev => prev.filter(e => e.id !== id))
-        showToast('Emergency marked as resolved', 'success')
+        showToast(t('superAdmin.overviewPage.toastResolved'), 'success')
       } else {
-        showToast('Failed to resolve emergency', 'error')
+        showToast(t('superAdmin.overviewPage.toastResolveFailed'), 'error')
       }
     } catch {
-      showToast('Network error', 'error')
+      showToast(t('superAdmin.overviewPage.toastNetworkError'), 'error')
     }
   }
 
@@ -146,33 +146,33 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
 
   const kpis = [
     {
-      title: 'Active Schools / Tenants',
+      title: t('superAdmin.overviewPage.kpiSchoolsTitle'),
       value: stats.totalOrgs,
-      sub: `${stats.activeOrgs} operational`,
+      sub: t('superAdmin.overviewPage.kpiSchoolsSub', { count: stats.activeOrgs }),
       icon: Building2,
       color: '#FFD60A',
       tab: 'ORGANIZATIONS'
     },
     {
-      title: 'Global Platform Users',
+      title: t('superAdmin.overviewPage.kpiUsersTitle'),
       value: stats.totalUsers,
-      sub: 'Admins, drivers & parents',
+      sub: t('superAdmin.overviewPage.kpiUsersSub'),
       icon: Users,
       color: '#30D158',
       tab: 'USERS'
     },
     {
-      title: 'Total Enrolled Students',
+      title: t('superAdmin.overviewPage.kpiStudentsTitle'),
       value: stats.totalStudents,
-      sub: 'Across all organizations',
+      sub: t('superAdmin.overviewPage.kpiStudentsSub'),
       icon: GraduationCap,
       color: '#0A84FF',
       tab: 'STUDENTS'
     },
     {
-      title: 'Live Active Trips',
+      title: t('superAdmin.overviewPage.kpiTripsTitle'),
       value: stats.activeTrips,
-      sub: `${stats.totalBuses} total buses mapped`,
+      sub: t('superAdmin.overviewPage.kpiTripsSub', { count: stats.totalBuses }),
       icon: Bus,
       color: '#BF5AF2',
       tab: 'ANALYTICS'
@@ -221,14 +221,14 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
               background: '#FFD60A', color: '#08080A',
               fontSize: 11, fontWeight: 800, padding: '3px 8px',
               borderRadius: 6, letterSpacing: '0.05em'
-            }}>SUPER ADMIN CONSOLE</span>
-            <span style={{ color: '#A6A6B2', fontSize: 13 }}>Platform Developer Control</span>
+            }}>{t('superAdmin.overviewPage.badge')}</span>
+            <span style={{ color: '#A6A6B2', fontSize: 13 }}>{t('superAdmin.overviewPage.subBadge')}</span>
           </div>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Global Operations Dashboard
+            {t('superAdmin.overviewPage.title')}
           </h2>
           <p style={{ color: '#A6A6B2', fontSize: 14, marginTop: 4, marginBottom: 0 }}>
-            Multi-tenant oversight, tenant quotas, security policies, and system-wide monitoring.
+            {t('superAdmin.overviewPage.subtitle')}
           </p>
         </div>
 
@@ -244,7 +244,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                   display: 'flex', alignItems: 'center', gap: 6
                 }}
               >
-                <GraduationCap size={16} color="#FFD60A" /> Students Roster
+                <GraduationCap size={16} color="#FFD60A" /> {t('superAdmin.overviewPage.studentsBtn')}
               </button>
               <button
                 onClick={() => onNavigateTab('ANALYTICS')}
@@ -255,7 +255,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                   display: 'flex', alignItems: 'center', gap: 6
                 }}
               >
-                <BarChart3 size={16} color="#0A84FF" /> Global Analytics
+                <BarChart3 size={16} color="#0A84FF" /> {t('superAdmin.overviewPage.analyticsBtn')}
               </button>
               <button
                 onClick={() => onNavigateTab('AUDIT_LOG')}
@@ -266,7 +266,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                   display: 'flex', alignItems: 'center', gap: 6
                 }}
               >
-                <FileText size={16} color="#FFD60A" /> Security Audit
+                <FileText size={16} color="#FFD60A" /> {t('superAdmin.overviewPage.auditBtn')}
               </button>
               <button
                 onClick={() => onNavigateTab('ORGANIZATIONS')}
@@ -277,7 +277,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                   display: 'flex', alignItems: 'center', gap: 6
                 }}
               >
-                <Building2 size={16} /> Manage Schools
+                <Building2 size={16} /> {t('superAdmin.overviewPage.manageSchoolsBtn')}
               </button>
             </>
           )}
@@ -350,12 +350,12 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Server size={18} color="#FFD60A" />
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
-                Platform Infrastructure Status
+                {t('superAdmin.overviewPage.infraTitle')}
               </h3>
             </div>
             <button
               onClick={loadData}
-              title="Refresh status"
+              title={t('superAdmin.overviewPage.refreshTooltip')}
               style={{ background: 'transparent', border: 'none', color: '#A6A6B2', cursor: 'pointer', padding: 4 }}
             >
               <RefreshCw size={14} />
@@ -382,7 +382,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 background: health?.checks?.database?.status === 'operational' ? 'rgba(48,209,88,0.12)' : 'rgba(255,159,10,0.12)',
                 padding: '3px 8px', borderRadius: 6
               }}>
-                {health?.checks?.database?.status === 'operational' ? 'Operational' : 'Active'}
+                {health?.checks?.database?.status === 'operational' ? t('superAdmin.overviewPage.opStatusOperational') : t('superAdmin.overviewPage.opStatusActive')}
               </span>
             </div>
 
@@ -399,7 +399,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 </div>
               </div>
               <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>
-                Connected
+                {t('superAdmin.overviewPage.opStatusConnected')}
               </span>
             </div>
 
@@ -409,7 +409,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>Role-Based Access Control (RBAC)</span>
               </div>
               <span style={{ fontSize: 12, color: '#30D158', fontWeight: 600, background: 'rgba(48,209,88,0.12)', padding: '3px 8px', borderRadius: 6 }}>
-                Enforced
+                {t('superAdmin.overviewPage.opStatusEnforced')}
               </span>
             </div>
 
@@ -419,7 +419,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>GPS Telematics Ingestion Engine</span>
               </div>
               <span style={{ fontSize: 12, color: '#0A84FF', fontWeight: 600, background: 'rgba(10,132,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>
-                Listening
+                {t('superAdmin.overviewPage.opStatusListening')}
               </span>
             </div>
           </div>
@@ -436,7 +436,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <AlertTriangle size={18} color={emergencies.length > 0 ? '#FF453A' : '#A6A6B2'} />
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
-                System-Wide Emergency Escalation
+                {t('superAdmin.overviewPage.emergencyTitle')}
               </h3>
             </div>
             <span style={{
@@ -445,7 +445,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
               background: emergencies.length > 0 ? 'rgba(255,69,58,0.16)' : '#1C1C21',
               color: emergencies.length > 0 ? '#FF453A' : '#6E6E7A'
             }}>
-              {emergencies.length} Active
+              {t('superAdmin.overviewPage.activeCount', { count: emergencies.length })}
             </span>
           </div>
 
@@ -455,8 +455,8 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
               justifyContent: 'center', padding: '36px 12px', textAlign: 'center'
             }}>
               <CheckCircle size={36} color="#30D158" style={{ marginBottom: 10 }} />
-              <span style={{ color: '#FFF', fontSize: 14, fontWeight: 600 }}>All Systems Clear</span>
-              <span style={{ color: '#6E6E7A', fontSize: 12, marginTop: 4 }}>No unresolved SOS or emergency signals across any school fleet.</span>
+              <span style={{ color: '#FFF', fontSize: 14, fontWeight: 600 }}>{t('superAdmin.overviewPage.allClearTitle')}</span>
+              <span style={{ color: '#6E6E7A', fontSize: 12, marginTop: 4 }}>{t('superAdmin.overviewPage.allClearSub')}</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 220, overflowY: 'auto' }}>
@@ -472,10 +472,10 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 >
                   <div>
                     <div style={{ color: '#FF453A', fontWeight: 700, fontSize: 13 }}>
-                      SOS Signal: {em.driver?.name || 'Driver'}
+                      {t('superAdmin.overviewPage.sosSignal', { name: em.driver?.name || 'Driver' })}
                     </div>
                     <div style={{ color: '#A6A6B2', fontSize: 11, marginTop: 2 }}>
-                      {new Date(em.timestamp).toLocaleTimeString()} • Phone: {em.driver?.phone || 'N/A'}
+                      {new Date(em.timestamp).toLocaleTimeString()} • {t('superAdmin.overviewPage.phone', { phone: em.driver?.phone || 'N/A' })}
                     </div>
                   </div>
                   <button
@@ -486,7 +486,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                       fontWeight: 700, cursor: 'pointer'
                     }}
                   >
-                    Resolve
+                    {t('superAdmin.overviewPage.resolveBtn')}
                   </button>
                 </div>
               ))}
@@ -506,7 +506,7 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <FileText size={18} color="#FFD60A" />
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
-              Recent Security & Administrative Activity
+              {t('superAdmin.overviewPage.activityTitle')}
             </h3>
           </div>
           {onNavigateTab && (
@@ -518,14 +518,14 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
               }}
             >
-              View Full Audit Log <ArrowRight size={13} />
+              {t('superAdmin.overviewPage.viewFullAudit')} <ArrowRight size={13} />
             </button>
           )}
         </div>
 
         {recentLogs.length === 0 ? (
           <div style={{ padding: '24px 0', textAlign: 'center', color: '#6E6E7A', fontSize: 13 }}>
-            No recent audit log entries recorded yet. Platform actions (user creation, tenant updates) will stream here.
+            {t('superAdmin.overviewPage.noLogs')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -548,10 +548,10 @@ export default function SuperAdminOverviewTab({ onNavigateTab }: { onNavigateTab
                       {log.action}
                     </span>
                     <span style={{ fontSize: 13, color: '#FFF', fontWeight: 500 }}>
-                      {log.target ? `${log.target}` : 'System'}
+                      {log.target ? `${log.target}` : t('superAdmin.overviewPage.system')}
                     </span>
                     <span style={{ fontSize: 12, color: '#A6A6B2' }}>
-                      by {log.user?.name || log.user?.email || 'Administrator'}
+                      {t('superAdmin.overviewPage.by', { name: log.user?.name || log.user?.email || t('superAdmin.overviewPage.adminDefault') })}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6E6E7A', fontSize: 11 }}>

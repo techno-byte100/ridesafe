@@ -170,11 +170,11 @@ export default function StudentsTab() {
 
   const handleSave = async () => {
     if (!form.name.trim() || form.name.trim().length < 2) {
-      showToast('Student name must be at least 2 characters', 'error')
+      showToast(t('superAdmin.studentsPage.validationName'), 'error')
       return
     }
     if (!form.parentContact1.trim()) {
-      showToast('Primary parent contact phone is required', 'error')
+      showToast(t('superAdmin.studentsPage.validationPhone'), 'error')
       return
     }
 
@@ -205,24 +205,24 @@ export default function StudentsTab() {
       })
 
       if (res.ok) {
-        showToast(editingStudent ? 'Student details updated!' : 'Student registered successfully!')
+        showToast(editingStudent ? t('superAdmin.studentsPage.toastUpdated') : t('superAdmin.studentsPage.toastCreated'))
         setShowModal(false)
         setEditingStudent(null)
         setForm(defaultStudentForm)
         loadData()
       } else {
         const err = await res.json()
-        showToast(err.error || 'Failed to save student', 'error')
+        showToast(err.error || t('superAdmin.studentsPage.toastFailedSave'), 'error')
       }
     } catch {
-      showToast('Network error saving student', 'error')
+      showToast(t('superAdmin.studentsPage.toastNetworkSaveError'), 'error')
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (s: StudentRecord) => {
-    if (!confirm(`Are you sure you want to delete student "${s.name}"? This removes their attendance logs.`)) return
+    if (!confirm(t('superAdmin.studentsPage.confirmDelete', { name: s.name }))) return
     setDeletingId(s.id)
     try {
       const res = await fetch('/api/admin/students', {
@@ -231,14 +231,14 @@ export default function StudentsTab() {
         body: JSON.stringify({ id: s.id })
       })
       if (res.ok) {
-        showToast(`Student "${s.name}" deleted`)
+        showToast(t('superAdmin.studentsPage.toastDeleted', { name: s.name }))
         loadData()
       } else {
         const err = await res.json()
-        showToast(err.error || 'Failed to delete student', 'error')
+        showToast(err.error || t('superAdmin.studentsPage.toastFailedDelete'), 'error')
       }
     } catch {
-      showToast('Network error deleting student', 'error')
+      showToast(t('superAdmin.studentsPage.toastNetworkDeleteError'), 'error')
     } finally {
       setDeletingId(null)
     }
@@ -272,7 +272,7 @@ export default function StudentsTab() {
     link.download = `ridesafe_students_${new Date().toISOString().slice(0, 10)}.csv`
     link.click()
     URL.revokeObjectURL(url)
-    showToast('Exported student roster to CSV')
+    showToast(t('superAdmin.studentsPage.toastExportedCsv'))
   }
 
   // Filtered List
@@ -323,45 +323,45 @@ export default function StudentsTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
         <div style={{ background: '#141417', border: '1px solid #26262C', borderRadius: 14, padding: '18px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#A6A6B2', fontSize: 13 }}>
-            <span>Total Enrolled</span>
+            <span>{t('superAdmin.studentsPage.totalEnrolledTitle')}</span>
             <GraduationCap size={18} color="#FFD60A" />
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: '#FFF', marginTop: 8 }}>{totalStudents}</div>
-          <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>Across all schools & tenants</div>
+          <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>{t('superAdmin.studentsPage.totalEnrolledSub')}</div>
         </div>
 
         <div style={{ background: '#141417', border: '1px solid #26262C', borderRadius: 14, padding: '18px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#A6A6B2', fontSize: 13 }}>
-            <span>Active Onboard Bus</span>
+            <span>{t('superAdmin.studentsPage.activeOnboardTitle')}</span>
             <Bus size={18} color="#30D158" />
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: '#30D158', marginTop: 8 }}>{boardedToday}</div>
-          <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>{droppedOffToday} completed safe dropoffs</div>
+          <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>{t('superAdmin.studentsPage.activeOnboardSub', { count: droppedOffToday })}</div>
         </div>
 
         <div style={{ background: '#141417', border: '1px solid #26262C', borderRadius: 14, padding: '18px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#A6A6B2', fontSize: 13 }}>
-            <span>Parent Profile Linked</span>
+            <span>{t('superAdmin.studentsPage.parentLinkedTitle')}</span>
             <UserCheck size={18} color="#0A84FF" />
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: '#FFF', marginTop: 8 }}>
             {parentLinkedCount} <span style={{ fontSize: 14, color: '#A6A6B2' }}>/ {totalStudents}</span>
           </div>
           <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>
-            {totalStudents > 0 ? Math.round((parentLinkedCount / totalStudents) * 100) : 0}% accounts synchronized
+            {t('superAdmin.studentsPage.parentLinkedSub', { pct: totalStudents > 0 ? Math.round((parentLinkedCount / totalStudents) * 100) : 0 })}
           </div>
         </div>
 
         <div style={{ background: '#141417', border: '1px solid #26262C', borderRadius: 14, padding: '18px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', color: '#A6A6B2', fontSize: 13 }}>
-            <span>Route & Driver Assigned</span>
+            <span>{t('superAdmin.studentsPage.routeAssignedTitle')}</span>
             <RouteIcon size={18} color="#BF5AF2" />
           </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: '#FFF', marginTop: 8 }}>
             {routeAssignedCount} <span style={{ fontSize: 14, color: '#A6A6B2' }}>/ {totalStudents}</span>
           </div>
           <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>
-            {totalStudents - routeAssignedCount} unassigned students pending
+            {t('superAdmin.studentsPage.routeAssignedSub', { count: totalStudents - routeAssignedCount })}
           </div>
         </div>
       </div>
@@ -372,10 +372,10 @@ export default function StudentsTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <GraduationCap size={22} color="#FFD60A" /> Student Directory, Boarding & Relationship Hub
+              <GraduationCap size={22} color="#FFD60A" /> {t('superAdmin.studentsPage.title')}
             </h3>
             <p style={{ margin: '4px 0 0', color: '#A6A6B2', fontSize: 13 }}>
-              Cross-tenant student roster with parent profiles, driver route assignments, and live boarding confirmations.
+              {t('superAdmin.studentsPage.subtitle')}
             </p>
           </div>
 
@@ -388,7 +388,7 @@ export default function StudentsTab() {
                 display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer'
               }}
             >
-              <Download size={14} color="#0A84FF" /> Export CSV
+              <Download size={14} color="#0A84FF" /> {t('superAdmin.studentsPage.exportCsvBtn')}
             </button>
             <button
               onClick={openAddModal}
@@ -398,7 +398,7 @@ export default function StudentsTab() {
                 display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer'
               }}
             >
-              <Plus size={16} /> Enroll Student
+              <Plus size={16} /> {t('superAdmin.studentsPage.enrollBtn')}
             </button>
           </div>
         </div>
@@ -409,7 +409,7 @@ export default function StudentsTab() {
             <Search size={16} color="#6E6E7A" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
-              placeholder="Search student, parent name, or contact number..."
+              placeholder={t('superAdmin.studentsPage.searchPlaceholder')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
@@ -429,7 +429,7 @@ export default function StudentsTab() {
                 padding: '9px 12px', borderRadius: 8, fontSize: 13, outline: 'none'
               }}
             >
-              <option value="ALL">All Schools & Tenants</option>
+              <option value="ALL">{t('superAdmin.studentsPage.filterAllSchools')}</option>
               {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
           )}
@@ -443,7 +443,7 @@ export default function StudentsTab() {
                 padding: '9px 12px', borderRadius: 8, fontSize: 13, outline: 'none'
               }}
             >
-              <option value="ALL">All Assigned Routes</option>
+              <option value="ALL">{t('superAdmin.studentsPage.filterAllRoutes')}</option>
               {routes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           )}
@@ -452,7 +452,7 @@ export default function StudentsTab() {
         {/* Students List */}
         {filteredStudents.length === 0 ? (
           <div style={{ padding: '48px 0', textAlign: 'center', color: '#6E6E7A', fontSize: 14 }}>
-            {searchQuery ? `No students found matching "${searchQuery}".` : 'No enrolled students found.'}
+            {searchQuery ? t('superAdmin.studentsPage.noStudentsFoundQuery', { query: searchQuery }) : t('superAdmin.studentsPage.noStudentsFound')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -489,46 +489,46 @@ export default function StudentsTab() {
                         </span>
                       </div>
                       <div style={{ fontSize: 12, color: '#A6A6B2', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span>School: <strong style={{ color: '#FFF' }}>{student.organization?.name || 'Unassigned'}</strong></span>
+                        <span>{t('superAdmin.studentsPage.schoolLabel')} <strong style={{ color: '#FFF' }}>{student.organization?.name || t('superAdmin.studentsPage.unassignedSchool')}</strong></span>
                         <span>•</span>
-                        <span>Tel: {student.parentContact1}</span>
+                        <span>{t('superAdmin.studentsPage.telLabel')} {student.parentContact1}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Parent Profile Mapping */}
                   <div style={{ minWidth: 180 }}>
-                    <div style={{ fontSize: 11, color: '#6E6E7A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Parent Profile</div>
+                    <div style={{ fontSize: 11, color: '#6E6E7A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('superAdmin.studentsPage.parentProfileLabel')}</div>
                     {student.parent ? (
                       <div style={{ marginTop: 2 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#30D158' }}>{student.parent.name}</div>
                         <div style={{ fontSize: 11, color: '#A6A6B2' }}>{student.parent.email}</div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: 12, color: '#FF9F0A', marginTop: 2 }}>⚠️ No parent account linked</div>
+                      <div style={{ fontSize: 12, color: '#FF9F0A', marginTop: 2 }}>{t('superAdmin.studentsPage.noParentLinked')}</div>
                     )}
                   </div>
 
                   {/* Route & Driver Context */}
                   <div style={{ minWidth: 180 }}>
-                    <div style={{ fontSize: 11, color: '#6E6E7A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Bus & Driver Assignment</div>
+                    <div style={{ fontSize: 11, color: '#6E6E7A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('superAdmin.studentsPage.busDriverAssignmentLabel')}</div>
                     {student.route ? (
                       <div style={{ marginTop: 2 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#FFF', display: 'flex', alignItems: 'center', gap: 4 }}>
                           <RouteIcon size={13} color="#FFD60A" /> {student.route.name}
                         </div>
                         <div style={{ fontSize: 11, color: '#A6A6B2' }}>
-                          {assignedBus ? `Bus: ${assignedBus.plateNumber} (Driver: ${assignedDriver?.name || 'Assigned'})` : 'No bus assigned'}
+                          {assignedBus ? `${t('superAdmin.studentsPage.busPrefix')} ${assignedBus.plateNumber} (${t('superAdmin.studentsPage.driverPrefix')} ${assignedDriver?.name || t('superAdmin.studentsPage.assignedDriver')})` : t('superAdmin.studentsPage.noBusAssigned')}
                         </div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 2 }}>Unassigned route</div>
+                      <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 2 }}>{t('superAdmin.studentsPage.unassignedRoute')}</div>
                     )}
                   </div>
 
                   {/* Boarding Status & Confirmation Flags */}
                   <div style={{ minWidth: 170 }}>
-                    <div style={{ fontSize: 11, color: '#6E6E7A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Boarding Acknowledgment</div>
+                    <div style={{ fontSize: 11, color: '#6E6E7A', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('superAdmin.studentsPage.boardingAckLabel')}</div>
                     {latestAttendance ? (
                       <div style={{ marginTop: 4 }}>
                         <span style={{
@@ -536,20 +536,20 @@ export default function StudentsTab() {
                           background: latestAttendance.action === 'PICKED_UP' ? 'rgba(48,209,88,0.15)' : 'rgba(10,132,255,0.15)',
                           color: latestAttendance.action === 'PICKED_UP' ? '#30D158' : '#0A84FF'
                         }}>
-                          {latestAttendance.action === 'PICKED_UP' ? '🚌 ON BOARD' : '🏠 DROPPED OFF'}
+                          {latestAttendance.action === 'PICKED_UP' ? t('superAdmin.studentsPage.onBoardStatus') : t('superAdmin.studentsPage.droppedOffStatus')}
                         </span>
                         <div style={{ fontSize: 11, color: '#A6A6B2', marginTop: 4 }}>
                           {latestAttendance.parentConfirmedPickup || latestAttendance.parentConfirmedDropoff ? (
                             <span style={{ color: '#30D158', display: 'flex', alignItems: 'center', gap: 3 }}>
-                              <CheckCircle size={11} /> Parent Confirmed
+                              <CheckCircle size={11} /> {t('superAdmin.studentsPage.parentConfirmed')}
                             </span>
                           ) : (
-                            <span style={{ color: '#FF9F0A' }}>⏳ Awaiting parent check</span>
+                            <span style={{ color: '#FF9F0A' }}>{t('superAdmin.studentsPage.awaitingParent')}</span>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>No trip marked today</div>
+                      <div style={{ fontSize: 12, color: '#6E6E7A', marginTop: 4 }}>{t('superAdmin.studentsPage.noTripToday')}</div>
                     )}
                   </div>
 
@@ -564,7 +564,7 @@ export default function StudentsTab() {
                         display: 'flex', alignItems: 'center', gap: 4, fontSize: 12
                       }}
                     >
-                      <Pencil size={13} /> Edit
+                      <Pencil size={13} /> {t('superAdmin.studentsPage.editBtn')}
                     </button>
                     <button
                       onClick={() => handleDelete(student)}
@@ -606,7 +606,7 @@ export default function StudentsTab() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#FFF', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <GraduationCap size={20} color="#FFD60A" />
-                  {editingStudent ? 'Edit Student & Route Mapping' : 'Enroll New Student'}
+                  {editingStudent ? t('superAdmin.studentsPage.editModalTitle') : t('superAdmin.studentsPage.addModalTitle')}
                 </h3>
                 <button
                   onClick={() => setShowModal(false)}
@@ -620,11 +620,11 @@ export default function StudentsTab() {
                 {/* Name */}
                 <div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#FFF', marginBottom: 6 }}>
-                    Full Student Name *
+                    {t('superAdmin.studentsPage.nameLabel')}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Maya Sofia"
+                    placeholder={t('superAdmin.studentsPage.namePlaceholder')}
                     value={form.name}
                     onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                     style={{
@@ -638,11 +638,11 @@ export default function StudentsTab() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#FFF', marginBottom: 6 }}>
-                      Grade / Class *
+                      {t('superAdmin.studentsPage.gradeLabel')}
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. Grade 4A / Standard 4"
+                      placeholder={t('superAdmin.studentsPage.gradePlaceholder')}
                       value={form.grade}
                       onChange={e => setForm(p => ({ ...p, grade: e.target.value }))}
                       style={{
@@ -653,7 +653,7 @@ export default function StudentsTab() {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#FFF', marginBottom: 6 }}>
-                      School Level
+                      {t('superAdmin.studentsPage.levelLabel')}
                     </label>
                     <select
                       value={form.level}
@@ -663,9 +663,9 @@ export default function StudentsTab() {
                         background: '#0E0E11', border: '1px solid #26262C', color: '#FFF', fontSize: 14
                       }}
                     >
-                      <option value="Kindergarten">Kindergarten</option>
-                      <option value="Primary">Primary School</option>
-                      <option value="Secondary">Secondary School</option>
+                      <option value="Kindergarten">{t('superAdmin.studentsPage.levelOptions.Kindergarten')}</option>
+                      <option value="Primary">{t('superAdmin.studentsPage.levelOptions.Primary')}</option>
+                      <option value="Secondary">{t('superAdmin.studentsPage.levelOptions.Secondary')}</option>
                     </select>
                   </div>
                 </div>
@@ -673,7 +673,7 @@ export default function StudentsTab() {
                 {/* Organization / School Tenant */}
                 <div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#FFF', marginBottom: 6 }}>
-                    School / Tenant
+                    {t('superAdmin.studentsPage.schoolTenantLabel')}
                   </label>
                   <select
                     value={form.organizationId}
@@ -683,7 +683,7 @@ export default function StudentsTab() {
                       background: '#0E0E11', border: '1px solid #26262C', color: '#FFF', fontSize: 14
                     }}
                   >
-                    <option value="">No School Selected</option>
+                    <option value="">{t('superAdmin.studentsPage.noSchoolSelected')}</option>
                     {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                   </select>
                 </div>
@@ -691,7 +691,7 @@ export default function StudentsTab() {
                 {/* Parent Profile Mapping */}
                 <div style={{ background: '#1C1C21', padding: 14, borderRadius: 10, border: '1px solid #26262C' }}>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#FFD60A', marginBottom: 6 }}>
-                    Link Parent Account (For Push Notifications & Confirmations)
+                    {t('superAdmin.studentsPage.linkParentAccountLabel')}
                   </label>
                   <select
                     value={form.parentId}
@@ -708,7 +708,7 @@ export default function StudentsTab() {
                       background: '#0E0E11', border: '1px solid #26262C', color: '#FFF', fontSize: 14, marginBottom: 10
                     }}
                   >
-                    <option value="">-- Select Registered Parent User --</option>
+                    <option value="">{t('superAdmin.studentsPage.selectParentPlaceholder')}</option>
                     {parents.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.name} ({p.email}){p.phone ? ` • ${p.phone}` : ''}
@@ -718,10 +718,10 @@ export default function StudentsTab() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>Primary Phone *</label>
+                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>{t('superAdmin.studentsPage.primaryPhoneLabel')}</label>
                       <input
                         type="tel"
-                        placeholder="+60123456789"
+                        placeholder={t('superAdmin.studentsPage.phonePlaceholder1')}
                         value={form.parentContact1}
                         onChange={e => setForm(p => ({ ...p, parentContact1: e.target.value }))}
                         style={{
@@ -731,10 +731,10 @@ export default function StudentsTab() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>Emergency Contact 2</label>
+                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>{t('superAdmin.studentsPage.emergencyContact2Label')}</label>
                       <input
                         type="tel"
-                        placeholder="+60198765432"
+                        placeholder={t('superAdmin.studentsPage.phonePlaceholder2')}
                         value={form.parentContact2}
                         onChange={e => setForm(p => ({ ...p, parentContact2: e.target.value }))}
                         style={{
@@ -749,7 +749,7 @@ export default function StudentsTab() {
                 {/* Route & Stop Assignment */}
                 <div style={{ background: '#1C1C21', padding: 14, borderRadius: 10, border: '1px solid #26262C' }}>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#0A84FF', marginBottom: 6 }}>
-                    Assign Bus Route & Designated Stops
+                    {t('superAdmin.studentsPage.assignBusRouteLabel')}
                   </label>
                   <select
                     value={form.routeId}
@@ -759,20 +759,20 @@ export default function StudentsTab() {
                       background: '#0E0E11', border: '1px solid #26262C', color: '#FFF', fontSize: 14, marginBottom: 10
                     }}
                   >
-                    <option value="">-- Select Bus Route --</option>
+                    <option value="">{t('superAdmin.studentsPage.selectRoutePlaceholder')}</option>
                     {routes.map(r => (
                       <option key={r.id} value={r.id}>
-                        {r.name} {r.buses?.[0] ? `(Bus: ${r.buses[0].plateNumber})` : ''}
+                        {r.name} {r.buses?.[0] ? t('superAdmin.studentsPage.busPrefixParen', { plate: r.buses[0].plateNumber }) : ''}
                       </option>
                     ))}
                   </select>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>Morning Pickup Time</label>
+                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>{t('superAdmin.studentsPage.pickupTimeLabel')}</label>
                       <input
                         type="text"
-                        placeholder="e.g. 07:15 AM"
+                        placeholder={t('superAdmin.studentsPage.pickupTimePlaceholder')}
                         value={form.pickupTime}
                         onChange={e => setForm(p => ({ ...p, pickupTime: e.target.value }))}
                         style={{
@@ -782,7 +782,7 @@ export default function StudentsTab() {
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>Registration Status</label>
+                      <label style={{ display: 'block', fontSize: 12, color: '#A6A6B2', marginBottom: 4 }}>{t('superAdmin.studentsPage.regStatusLabel')}</label>
                       <select
                         value={form.status}
                         onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
@@ -791,9 +791,9 @@ export default function StudentsTab() {
                           background: '#0E0E11', border: '1px solid #26262C', color: '#FFF', fontSize: 13
                         }}
                       >
-                        <option value="APPROVED">APPROVED (Active)</option>
-                        <option value="PENDING">PENDING REVIEW</option>
-                        <option value="INACTIVE">INACTIVE</option>
+                        <option value="APPROVED">{t('superAdmin.studentsPage.statusApproved')}</option>
+                        <option value="PENDING">{t('superAdmin.studentsPage.statusPending')}</option>
+                        <option value="INACTIVE">{t('superAdmin.studentsPage.statusInactive')}</option>
                       </select>
                     </div>
                   </div>
@@ -808,7 +808,7 @@ export default function StudentsTab() {
                     color: '#A6A6B2', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13
                   }}
                 >
-                  Cancel
+                  {t('superAdmin.studentsPage.cancelBtn')}
                 </button>
                 <button
                   onClick={handleSave}
@@ -818,7 +818,7 @@ export default function StudentsTab() {
                     padding: '10px 22px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: 13
                   }}
                 >
-                  {saving ? 'Saving...' : editingStudent ? 'Update Student' : 'Enroll Student'}
+                  {saving ? t('superAdmin.studentsPage.savingState') : editingStudent ? t('superAdmin.studentsPage.updateBtn') : t('superAdmin.studentsPage.enrollBtn')}
                 </button>
               </div>
             </motion.div>

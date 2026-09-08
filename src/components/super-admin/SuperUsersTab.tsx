@@ -32,16 +32,16 @@ function sanitizePhone(v: string) {
   return v.replace(/[^0-9+\s()\-]/g, '')
 }
 
-function validateForm(form: typeof defaultForm, isEdit = false): Record<string, string> {
+function validateForm(form: typeof defaultForm, isEdit = false, t?: (k: string) => string): Record<string, string> {
   const errs: Record<string, string> = {}
-  if (!form.name.trim() || form.name.trim().length < 2) errs.name = 'Name must be at least 2 characters'
-  if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email address'
+  if (!form.name.trim() || form.name.trim().length < 2) errs.name = t ? t('superAdmin.usersPage.validationName') : 'Name must be at least 2 characters'
+  if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = t ? t('superAdmin.usersPage.validationEmail') : 'Enter a valid email address'
   if (isEdit) {
-    if (form.password && form.password.length < 6) errs.password = 'Password must be at least 6 characters'
+    if (form.password && form.password.length < 6) errs.password = t ? t('superAdmin.usersPage.validationPassword') : 'Password must be at least 6 characters'
   } else if (!form.password || form.password.length < 6) {
-    errs.password = 'Password must be at least 6 characters'
+    errs.password = t ? t('superAdmin.usersPage.validationPassword') : 'Password must be at least 6 characters'
   }
-  if (form.phone && !/^[+0-9\s()\-]{7,20}$/.test(form.phone)) errs.phone = 'Enter a valid phone number'
+  if (form.phone && !/^[+0-9\s()\-]{7,20}$/.test(form.phone)) errs.phone = t ? t('superAdmin.usersPage.validationPhone') : 'Enter a valid phone number'
   return errs
 }
 
@@ -76,126 +76,174 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  // Bulk selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkActionRole, setBulkActionRole] = useState('')
   const [bulkActionOrg, setBulkActionOrg] = useState('')
   const [bulkBusy, setBulkBusy] = useState(false)
 
-  const loadUsers = () => {
-    Promise.all([
-      fetch('/api/admin/users').then(r => r.json()),
-      fetch('/api/admin/organizations').then(r => r.json()).catch(() => ({ organizations: [] })),
-    ]).then(([data, orgData]) => {
-      setUsers(data.users || [])
-      setOrgs(orgData.organizations || [])
-      setSelectedIds(new Set())
-      setLoading(false)
-    }).catch(console.error)
-  }
-
-  useEffect(() => { loadUsers() }, [])
-
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
-    setToast(msg); setToastType(type); setTimeout(() => setToast(''), 3500)
+    setToast(msg)
+    setToastType(type)
+    setTimeout(() => setToast(''), 3500)
   }
 
-  const openAddModal = () => { setEditingUser(null); setForm(defaultForm); setFormErrors({}); setShowModal(true) }
+  const loadUsers = () => {
+    setLoading(true)
+    fetch('/api/admin/users')
+      .then(r => r.json())
+      .then(d => { setUsers(d.users || []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }
+
+  const loadOrgs = () => {
+    fetch('/api/admin/organizations')
+      .then(r => r.json())
+      .then(d => setOrgs(d.organizations || []))
+      .catch(() => {})
+  }
+
+  useEffect(() => { loadUsers(); loadOrgs() }, [])
+
+  const q = searchQuery.toLowerCase().trim()
+  const filtered = users.filter(u => {
+    const matchQ = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.phone && u.phone.includes(q))
+    const matchRole = filterRole === 'ALL' || u.role === filterRole
+    const matchOrg = filterOrg === 'ALL' || (filterOrg === '' ? !u.organizationId : u.organizationId === filterOrg)
+    return matchQ && matchRole && matchOrg
+  })
+
+  const openAddModal = () => {
+    setEditingUser(null)
+    setForm(defaultForm)
+    setFormErrors({})
+    setShowModal(true)
+  }
 
   const openEditModal = (u: User) => {
     setEditingUser(u)
-    setForm({ name: u.name, email: u.email, password: '', phone: u.phone || '', role: u.role, invoiceAmount: '150', organizationId: u.organizationId || '' })
+    setForm({
+      name: u.name,
+      email: u.email,
+      password: '',
+      phone: u.phone || '',
+      role: u.role,
+      invoiceAmount: '150',
+      organizationId: u.organizationId || '',
+    })
     setFormErrors({})
     setShowModal(true)
   }
 
   const handleSave = async () => {
-    const errs = validateForm(form, !!editingUser)
-    setFormErrors(errs)
-    if (Object.keys(errs).length > 0) return
-
+    const errs = validateForm(form, Boolean(editingUser), t)
+    if (Object.keys(errs).length > 0) { setFormErrors(errs); return }
     setSaving(true)
     try {
-      const res = editingUser
-        ? await fetch(`/api/admin/users/${editingUser.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: form.name, email: form.email, phone: form.phone || null,
-              role: form.role, organizationId: form.organizationId || null,
-              ...(form.password ? { password: form.password } : {}),
-            }),
-          })
-        : await fetch('/api/admin/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(form),
-          })
-      if (res.ok) {
-        showToast(editingUser ? 'User updated!' : 'User created successfully!')
-        setShowModal(false); setForm(defaultForm); setFormErrors({}); setEditingUser(null); loadUsers()
+      let res: Response
+      if (editingUser) {
+        const body: Record<string, string | null> = {
+          id: editingUser.id,
+          name: form.name,
+          email: form.email,
+          phone: form.phone || null,
+          role: form.role,
+          organizationId: form.organizationId || null
+        }
+        if (form.password) body.password = form.password
+        res = await fetch('/api/admin/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        })
       } else {
-        const err = await res.json()
-        showToast(err.error || (editingUser ? 'Failed to update user' : 'Failed to create user'), 'error')
+        res = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+            phone: form.phone || null,
+            role: form.role,
+            organizationId: form.organizationId || null
+          })
+        })
       }
-    } catch { showToast('Network error', 'error') } finally { setSaving(false) }
+      if (res.ok) {
+        showToast(editingUser ? t('superAdmin.usersPage.toastUserUpdated') : t('superAdmin.usersPage.toastUserCreated'))
+        setShowModal(false)
+        setForm(defaultForm)
+        setEditingUser(null)
+        loadUsers()
+      } else {
+        const e = await res.json()
+        showToast(e.error || (editingUser ? t('superAdmin.usersPage.toastUserFailedUpdate') : t('superAdmin.usersPage.toastUserFailedCreate')), 'error')
+      }
+    } catch {
+      showToast(t('superAdmin.usersPage.toastNetworkError'), 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleDelete = async (u: User) => {
-    if (!confirm(`Delete user "${u.name}"? This cannot be undone.`)) return
+    if (!confirm(t('superAdmin.usersPage.confirmDeleteUser', { name: u.name }))) return
     setDeletingId(u.id)
     try {
-      const res = await fetch(`/api/admin/users/${u.id}`, { method: 'DELETE' })
+      const res = await fetch('/api/admin/users', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: u.id })
+      })
       if (res.ok) {
-        showToast('User deleted')
+        showToast(t('superAdmin.usersPage.toastUserDeleted'))
         loadUsers()
       } else {
-        const err = await res.json()
-        showToast(err.error || 'Failed to delete user', 'error')
+        const e = await res.json()
+        showToast(e.error || t('superAdmin.usersPage.toastUserFailedDelete'), 'error')
       }
-    } catch { showToast('Network error', 'error') } finally { setDeletingId(null) }
+    } catch {
+      showToast(t('superAdmin.usersPage.toastNetworkError'), 'error')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
-  const openInvoiceModal = (user: User) => {
-    setInvoiceUser(user)
+  const openInvoiceModal = (u: User) => {
+    setInvoiceUser(u)
     setInvoiceAmount('150')
     setInvoiceAmountErr('')
     setShowInvoiceModal(true)
   }
 
   const handleGenerateInvoice = async () => {
-    const amount = parseFloat(invoiceAmount)
-    if (!invoiceAmount || isNaN(amount) || amount <= 0 || amount > 99999) {
-      setInvoiceAmountErr('Enter a valid amount between RM 1 and RM 99,999')
+    if (!invoiceUser) return
+    const amt = parseFloat(invoiceAmount)
+    if (isNaN(amt) || amt <= 0) {
+      setInvoiceAmountErr('Enter a valid amount > 0')
       return
     }
-    if (!invoiceUser) return
     setInvoicingId(invoiceUser.id)
-    showToast('⏳ Generating invoice…')
     try {
-      const res = await fetch('/api/billing/generate', {
+      const res = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parentId: invoiceUser.id, amount }),
+        body: JSON.stringify({ parentId: invoiceUser.id, amount: amt })
       })
+      const data = await res.json()
       if (res.ok) {
-        const data = await res.json()
-        showToast(`✅ Invoice created (ID: ${data.payment?.bukkuInvoiceId || 'N/A'})`)
+        showToast(t('superAdmin.usersPage.toastInvoiceGenerated'))
         setShowInvoiceModal(false)
-      } else throw new Error('Failed')
-    } catch { showToast('❌ Failed to generate invoice', 'error') }
-    finally { setInvoicingId(null) }
+      } else {
+        showToast(data.error || t('superAdmin.usersPage.toastInvoiceFailed'), 'error')
+      }
+    } catch {
+      showToast(t('superAdmin.usersPage.toastNetworkError'), 'error')
+    } finally {
+      setInvoicingId(null)
+    }
   }
 
-  // Filter users
-  const q = searchQuery.trim().toLowerCase()
-  const filtered = users.filter(u =>
-    (filterRole === 'ALL' || u.role === filterRole) &&
-    (filterOrg === 'ALL' || u.organizationId === filterOrg) &&
-    (!q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.phone?.toLowerCase().includes(q))
-  )
-
-  // Bulk selection helpers
   const toggleSelectUser = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev)
@@ -215,7 +263,7 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return
-    if (!confirm(`Are you sure you want to permanently delete ${selectedIds.size} selected user(s)?`)) return
+    if (!confirm(t('superAdmin.usersPage.confirmBulkDelete', { count: selectedIds.size }))) return
 
     setBulkBusy(true)
     try {
@@ -226,13 +274,13 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(`Deleted ${data.count} users successfully`)
+        showToast(t('superAdmin.usersPage.toastBulkDeleted', { count: data.count }))
         loadUsers()
       } else {
-        showToast(data.error || 'Failed to bulk delete', 'error')
+        showToast(data.error || t('superAdmin.usersPage.toastBulkDeleteFailed'), 'error')
       }
     } catch {
-      showToast('Network error during bulk delete', 'error')
+      showToast(t('superAdmin.usersPage.toastBulkDeleteNetworkError'), 'error')
     } finally {
       setBulkBusy(false)
     }
@@ -249,14 +297,14 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(`Updated role to ${bulkActionRole} for ${data.count} users`)
+        showToast(t('superAdmin.usersPage.toastBulkRoleUpdated', { role: bulkActionRole, count: data.count }))
         setBulkActionRole('')
         loadUsers()
       } else {
-        showToast(data.error || 'Failed to update user roles', 'error')
+        showToast(data.error || t('superAdmin.usersPage.toastBulkRoleFailed'), 'error')
       }
     } catch {
-      showToast('Network error during bulk update', 'error')
+      showToast(t('superAdmin.usersPage.toastBulkRoleNetworkError'), 'error')
     } finally {
       setBulkBusy(false)
     }
@@ -273,14 +321,14 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(`Reassigned organization for ${data.count} users`)
+        showToast(t('superAdmin.usersPage.toastBulkOrgReassigned', { count: data.count }))
         setBulkActionOrg('')
         loadUsers()
       } else {
-        showToast(data.error || 'Failed to update organization assignment', 'error')
+        showToast(data.error || t('superAdmin.usersPage.toastBulkOrgFailed'), 'error')
       }
     } catch {
-      showToast('Network error during organization reassignment', 'error')
+      showToast(t('superAdmin.usersPage.toastBulkOrgNetworkError'), 'error')
     } finally {
       setBulkBusy(false)
     }
@@ -305,37 +353,34 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
       </AnimatePresence>
 
       <div className="glass-panel" style={{ padding: '2rem' }}>
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <ShieldCheck size={20} color="var(--primary)" /> Global User Directory & RBAC
+              <ShieldCheck size={20} color="var(--primary)" /> {t('superAdmin.usersPage.title')}
             </h3>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              {users.length} registered accounts across all roles & schools · Bulk actions enabled
+              {t('superAdmin.usersPage.subtitle', { count: users.length })}
             </div>
           </div>
           <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
             className="btn btn-primary" onClick={openAddModal}>
-            <UserPlus size={16} /> Add User
+            <UserPlus size={16} /> {t('superAdmin.usersPage.addUserBtn')}
           </motion.button>
         </div>
 
-        {/* Role / organisation filters */}
         <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <select className="select-field" value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ width: 'auto', minWidth: 160 }}>
-            <option value="ALL">All Roles</option>
-            {['SUPER_ADMIN', 'ADMIN', 'SCHOOL_ADMIN', 'DRIVER', 'PARENT'].map(r => <option key={r} value={r}>{r}</option>)}
+            <option value="ALL">{t('superAdmin.usersPage.filterAllRoles')}</option>
+            {['SUPER_ADMIN', 'ADMIN', 'SCHOOL_ADMIN', 'DRIVER', 'PARENT'].map(r => <option key={r} value={r}>{t(`superAdmin.roles.${r}`) || r}</option>)}
           </select>
           {currentUserRole === 'SUPER_ADMIN' && orgs.length > 0 && (
             <select className="select-field" value={filterOrg} onChange={e => setFilterOrg(e.target.value)} style={{ width: 'auto', minWidth: 180 }}>
-              <option value="ALL">All Organisations</option>
-              <option value="">No organisation (global)</option>
+              <option value="ALL">{t('superAdmin.usersPage.filterAllOrgs')}</option>
+              <option value="">{t('superAdmin.usersPage.filterNoOrg')}</option>
               {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
           )}
 
-          {/* Select all toggle button */}
           <button
             onClick={toggleSelectAll}
             style={{
@@ -346,14 +391,13 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
             }}
           >
             {selectedIds.size === filtered.length && filtered.length > 0 ? (
-              <><CheckSquare size={14} color="#FFD60A" /> Deselect All</>
+              <><CheckSquare size={14} color="#FFD60A" /> {t('superAdmin.usersPage.deselectAllBtn')}</>
             ) : (
-              <><Square size={14} /> Select All ({filtered.length})</>
+              <><Square size={14} /> {t('superAdmin.usersPage.selectAllBtn', { count: filtered.length })}</>
             )}
           </button>
         </div>
 
-        {/* Bulk Actions Floating Toolbar */}
         <AnimatePresence>
           {selectedIds.size > 0 && (
             <motion.div
@@ -372,13 +416,12 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                   background: '#FFD60A', color: '#08080A',
                   fontWeight: 800, fontSize: 12, padding: '2px 8px', borderRadius: 6
                 }}>
-                  {selectedIds.size} SELECTED
+                  {t('superAdmin.usersPage.selectedCount', { count: selectedIds.size })}
                 </span>
-                <span style={{ fontSize: 13, color: '#A6A6B2' }}>Bulk operations on selected users</span>
+                <span style={{ fontSize: 13, color: '#A6A6B2' }}>{t('superAdmin.usersPage.bulkOpsSub')}</span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                {/* Bulk Role Change */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <select
                     value={bulkActionRole}
@@ -388,11 +431,11 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       borderRadius: 8, padding: '6px 10px', fontSize: 12
                     }}
                   >
-                    <option value="">Change Role...</option>
-                    <option value="DRIVER">Driver</option>
-                    <option value="PARENT">Parent</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="SCHOOL_ADMIN">School Admin</option>
+                    <option value="">{t('superAdmin.usersPage.changeRolePlaceholder')}</option>
+                    <option value="DRIVER">{t('superAdmin.roles.DRIVER')}</option>
+                    <option value="PARENT">{t('superAdmin.roles.PARENT')}</option>
+                    <option value="ADMIN">{t('superAdmin.roles.ADMIN')}</option>
+                    <option value="SCHOOL_ADMIN">{t('superAdmin.roles.SCHOOL_ADMIN')}</option>
                   </select>
                   <button
                     onClick={handleBulkRoleChange}
@@ -403,11 +446,10 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       cursor: 'pointer', opacity: !bulkActionRole || bulkBusy ? 0.5 : 1
                     }}
                   >
-                    Apply Role
+                    {t('superAdmin.usersPage.applyRoleBtn')}
                   </button>
                 </div>
 
-                {/* Bulk Org Assignment */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <select
                     value={bulkActionOrg}
@@ -417,8 +459,8 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       borderRadius: 8, padding: '6px 10px', fontSize: 12
                     }}
                   >
-                    <option value="">Reassign Org...</option>
-                    <option value="">No Organisation (Global)</option>
+                    <option value="">{t('superAdmin.usersPage.reassignOrgPlaceholder')}</option>
+                    <option value="">{t('superAdmin.usersPage.noOrgGlobal')}</option>
                     {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                   </select>
                   <button
@@ -430,11 +472,10 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       cursor: 'pointer', opacity: bulkBusy ? 0.5 : 1
                     }}
                   >
-                    Assign Org
+                    {t('superAdmin.usersPage.assignOrgBtn')}
                   </button>
                 </div>
 
-                {/* Bulk Delete */}
                 <button
                   onClick={handleBulkDelete}
                   disabled={bulkBusy}
@@ -445,7 +486,7 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                     opacity: bulkBusy ? 0.5 : 1
                   }}
                 >
-                  <Trash2 size={13} /> Delete Selected
+                  <Trash2 size={13} /> {t('superAdmin.usersPage.deleteSelectedBtn')}
                 </button>
 
                 <button
@@ -455,16 +496,15 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                     fontSize: 12, cursor: 'pointer'
                   }}
                 >
-                  Clear
+                  {t('superAdmin.usersPage.clearBtn')}
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Role stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(100px,1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
-          {[['Admins', 'ADMIN', 'var(--danger)'], ['Drivers', 'DRIVER', 'var(--info)'], ['Parents', 'PARENT', 'var(--success)']].map(([label, role, color]) => (
+          {[[t('superAdmin.usersPage.statsAdmins'), 'ADMIN', 'var(--danger)'], [t('superAdmin.usersPage.statsDrivers'), 'DRIVER', 'var(--info)'], [t('superAdmin.usersPage.statsParents'), 'PARENT', 'var(--success)']].map(([label, role, color]) => (
             <div key={label} className="glass-panel" style={{ padding: '0.75rem 1rem', textAlign: 'center', borderLeft: `3px solid ${color}` }}>
               <div style={{ fontSize: '1.5rem', fontWeight: 800, color: color as string }}>{users.filter(u => u.role.includes(role as string)).length}</div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2, textTransform: 'uppercase' }}>{label}</div>
@@ -472,7 +512,6 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
           ))}
         </div>
 
-        {/* Users list */}
         <div style={{ display: 'grid', gap: '0.65rem' }}>
           {filtered.map(u => {
             const isSelected = selectedIds.has(u.id)
@@ -484,7 +523,6 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                   borderRadius: 10, border: isSelected ? '1px solid rgba(255,214,10,0.4)' : '1px solid var(--surface-border)'
                 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                  {/* Select Checkbox */}
                   <input
                     type="checkbox"
                     checked={isSelected}
@@ -505,7 +543,7 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       <span>·</span>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: u.lastLoginAt ? '#30D158' : '#6E6E7A' }}>
                         <Clock size={11} />
-                        {u.lastLoginAt ? `Active ${new Date(u.lastLoginAt).toLocaleDateString()}` : 'Never logged in'}
+                        {u.lastLoginAt ? t('superAdmin.usersPage.activeStatus', { date: new Date(u.lastLoginAt).toLocaleDateString() }) : t('superAdmin.usersPage.neverLoggedIn')}
                       </span>
                     </div>
                   </div>
@@ -519,7 +557,7 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       style={{ padding: '0.35rem 0.8rem', fontSize: '0.75rem', background: 'var(--primary)', color: 'white', border: 'none' }}
                       disabled={invoicingId === u.id}
                     >
-                      💰 Invoice
+                      {t('superAdmin.usersPage.invoiceBtn')}
                     </motion.button>
                   )}
                   {u.buses && u.buses.length > 0 && (
@@ -527,14 +565,14 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                       <Bus size={11} /> {u.buses.map(b => b.plateNumber).join(', ')}
                     </span>
                   )}
-                  <span className={`badge ${ROLE_COLORS[u.role] || 'badge-pending'}`}>{u.role.replace('_', ' ')}</span>
+                  <span className={`badge ${ROLE_COLORS[u.role] || 'badge-pending'}`}>{t(`superAdmin.roles.${u.role}`) || u.role.replace('_', ' ')}</span>
                   <motion.button whileTap={{ scale: 0.92 }} onClick={() => openEditModal(u)}
-                    title="Edit user"
+                    title={t('superAdmin.usersPage.editUserTooltip')}
                     style={{ background: 'none', border: '1px solid var(--surface-border)', borderRadius: 8, padding: '4px 7px', cursor: 'pointer', color: 'var(--text-muted)', display: 'flex' }}>
                     <Pencil size={13} />
                   </motion.button>
                   <motion.button whileTap={{ scale: 0.92 }} onClick={() => handleDelete(u)}
-                    title="Delete user" disabled={deletingId === u.id}
+                    title={t('superAdmin.usersPage.deleteUserTooltip')} disabled={deletingId === u.id}
                     style={{ background: 'none', border: '1px solid rgba(255,69,58,0.3)', borderRadius: 8, padding: '4px 7px', cursor: 'pointer', color: 'var(--danger)', display: 'flex' }}>
                     <Trash2 size={13} />
                   </motion.button>
@@ -542,60 +580,58 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
               </motion.div>
             )
           })}
-          {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>{q ? `No users match "${searchQuery}".` : 'No users found.'}</div>}
+          {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>{q ? t('superAdmin.usersPage.noUsersMatch', { query: searchQuery }) : t('superAdmin.usersPage.noUsersFound')}</div>}
         </div>
       </div>
 
-      {/* Add / Edit User Modal */}
       <AnimatePresence>
         {showModal && (
           <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={e => { if (e.target === e.currentTarget) { setShowModal(false); setFormErrors({}); setEditingUser(null) } }}>
             <motion.div className="modal-box" initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><UserPlus size={20} /> {editingUser ? 'Edit User' : 'Add New User'}</h3>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><UserPlus size={20} /> {editingUser ? t('superAdmin.usersPage.editModalTitle') : t('superAdmin.usersPage.addModalTitle')}</h3>
                 <button onClick={() => { setShowModal(false); setFormErrors({}); setEditingUser(null) }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer', lineHeight: 1 }}>✕</button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <Field label="Full Name *" error={formErrors.name}>
-                  <input className="input-field" placeholder="e.g. Ahmad Bin Ali" value={form.name}
+                <Field label={t('superAdmin.usersPage.fullNameLabel')} error={formErrors.name}>
+                  <input className="input-field" placeholder={t('superAdmin.usersPage.fullNamePlaceholder')} value={form.name}
                     minLength={2} maxLength={100}
                     onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                     style={{ borderColor: formErrors.name ? 'var(--danger)' : undefined }}
                   />
                 </Field>
 
-                <Field label="Role *">
+                <Field label={t('superAdmin.usersPage.roleLabel')}>
                   <select className="select-field" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
-                    <option value="DRIVER">Driver</option>
-                    <option value="PARENT">Parent</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="SCHOOL_ADMIN">School Admin</option>
-                    {currentUserRole === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
+                    <option value="DRIVER">{t('superAdmin.roles.DRIVER')}</option>
+                    <option value="PARENT">{t('superAdmin.roles.PARENT')}</option>
+                    <option value="ADMIN">{t('superAdmin.roles.ADMIN')}</option>
+                    <option value="SCHOOL_ADMIN">{t('superAdmin.roles.SCHOOL_ADMIN')}</option>
+                    {currentUserRole === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">{t('superAdmin.roles.SUPER_ADMIN')}</option>}
                   </select>
                 </Field>
 
-                <Field label="Organisation">
+                <Field label={t('superAdmin.usersPage.orgLabel')}>
                   <select className="select-field" value={form.organizationId} onChange={e => setForm(p => ({ ...p, organizationId: e.target.value }))}>
-                    <option value="">No organisation (global)</option>
+                    <option value="">{t('superAdmin.usersPage.filterNoOrg')}</option>
                     {orgs.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
                   </select>
                 </Field>
 
-                <Field label="Email Address *" error={formErrors.email}>
-                  <input type="email" className="input-field" placeholder="user@school.com" value={form.email}
+                <Field label={t('superAdmin.usersPage.emailLabel')} error={formErrors.email}>
+                  <input type="email" className="input-field" placeholder={t('superAdmin.usersPage.emailPlaceholder')} value={form.email}
                     onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                     style={{ borderColor: formErrors.email ? 'var(--danger)' : undefined }}
                   />
                 </Field>
 
-                {/* Phone: type="tel" + sanitize non-phone chars */}
-                <Field label="Phone Number" error={formErrors.phone}>
+                <Field label={t('superAdmin.usersPage.phoneLabel')} error={formErrors.phone}>
                   <input
                     type="tel"
                     className="input-field"
-                    placeholder="+60 12-345 6789"
+                    placeholder={t('superAdmin.usersPage.phonePlaceholder')}
                     value={form.phone}
                     maxLength={20}
                     onChange={e => setForm(p => ({ ...p, phone: sanitizePhone(e.target.value) }))}
@@ -603,8 +639,8 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
                   />
                 </Field>
 
-                <Field label={editingUser ? 'New Password' : 'Password *'} error={formErrors.password}>
-                  <input type="password" className="input-field" placeholder={editingUser ? 'Leave blank to keep current' : 'Min. 6 characters'} value={form.password}
+                <Field label={editingUser ? t('superAdmin.usersPage.passwordLabelNew') : t('superAdmin.usersPage.passwordLabel')} error={formErrors.password}>
+                  <input type="password" className="input-field" placeholder={editingUser ? t('superAdmin.usersPage.passwordPlaceholderEdit') : t('superAdmin.usersPage.passwordPlaceholderAdd')} value={form.password}
                     minLength={editingUser ? undefined : 6} maxLength={128}
                     onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                     style={{ borderColor: formErrors.password ? 'var(--danger)' : undefined }}
@@ -614,10 +650,10 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button className="btn" style={{ flex: 1, background: 'var(--surface-2)', border: '1px solid var(--surface-border)', color: 'var(--text-main)' }}
-                  onClick={() => { setShowModal(false); setFormErrors({}); setEditingUser(null) }}>Cancel</button>
+                  onClick={() => { setShowModal(false); setFormErrors({}); setEditingUser(null) }}>{t('superAdmin.usersPage.cancelBtn')}</button>
                 <motion.button whileTap={{ scale: 0.97 }} className="btn btn-primary" style={{ flex: 2 }}
                   onClick={handleSave} disabled={saving}>
-                  {saving ? (editingUser ? 'Saving…' : 'Creating…') : (editingUser ? '✓ Save Changes' : 'Create User')}
+                  {saving ? (editingUser ? t('superAdmin.usersPage.savingState') : t('superAdmin.usersPage.creatingState')) : (editingUser ? t('superAdmin.usersPage.saveChangesBtn') : t('superAdmin.usersPage.createUserBtn'))}
                 </motion.button>
               </div>
             </motion.div>
@@ -625,7 +661,6 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
         )}
       </AnimatePresence>
 
-      {/* Invoice Modal */}
       <AnimatePresence>
         {showInvoiceModal && invoiceUser && (
           <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -633,21 +668,21 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
             <motion.div className="modal-box" initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  💰 Generate Parent Invoice
+                  {t('superAdmin.usersPage.invoiceModalTitle')}
                 </h3>
                 <button onClick={() => setShowInvoiceModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.4rem', cursor: 'pointer' }}>✕</button>
               </div>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                Creating official Bukku accounting invoice for <strong>{invoiceUser.name}</strong> ({invoiceUser.email}).
+                {t('superAdmin.usersPage.invoiceModalSub', { name: invoiceUser.name, email: invoiceUser.email })}
               </p>
-              <Field label="Invoice Amount (MYR) *" error={invoiceAmountErr}>
+              <Field label={t('superAdmin.usersPage.invoiceAmountLabel')} error={invoiceAmountErr}>
                 <input
                   type="number"
                   step="0.01"
                   min="1"
                   max="99999"
                   className="input-field"
-                  placeholder="150.00"
+                  placeholder={t('superAdmin.usersPage.invoiceAmountPlaceholder')}
                   value={invoiceAmount}
                   onChange={e => {
                     setInvoiceAmount(e.target.value)
@@ -658,10 +693,10 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
               </Field>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button className="btn" style={{ flex: 1, background: 'var(--surface-2)', border: '1px solid var(--surface-border)', color: 'var(--text-main)' }}
-                  onClick={() => setShowInvoiceModal(false)}>Cancel</button>
+                  onClick={() => setShowInvoiceModal(false)}>{t('superAdmin.usersPage.cancelBtn')}</button>
                 <motion.button whileTap={{ scale: 0.97 }} className="btn btn-primary" style={{ flex: 2 }}
                   onClick={handleGenerateInvoice} disabled={invoicingId !== null}>
-                  {invoicingId ? 'Generating Bukku Invoice…' : 'Confirm & Send Invoice'}
+                  {invoicingId ? t('superAdmin.usersPage.generatingInvoiceState') : t('superAdmin.usersPage.confirmSendInvoiceBtn')}
                 </motion.button>
               </div>
             </motion.div>

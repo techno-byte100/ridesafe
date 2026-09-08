@@ -1,10 +1,11 @@
-'use client'
+"'use client'"
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   TrendingUp, Building2, Users, GraduationCap, Bus, Activity,
   DollarSign, UserPlus, AlertTriangle, BarChart3, PieChart
 } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface AnalyticsData {
   overview: {
@@ -39,6 +40,7 @@ const TIER_BADGES: Record<string, { color: string; bg: string }> = {
 }
 
 export default function GlobalAnalyticsTab() {
+  const { t } = useTranslation()
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -67,7 +69,7 @@ export default function GlobalAnalyticsTab() {
     return (
       <div style={{ textAlign: 'center', padding: 60, color: '#6E6E7A' }}>
         <AlertTriangle size={40} style={{ marginBottom: 12 }} />
-        <div style={{ fontWeight: 600 }}>Failed to load analytics data</div>
+        <div style={{ fontWeight: 600 }}>{t('superAdmin.analyticsPage.failedToLoad')}</div>
       </div>
     )
   }
@@ -109,34 +111,34 @@ export default function GlobalAnalyticsTab() {
             background: '#0A84FF', color: '#FFF',
             fontSize: 11, fontWeight: 800, padding: '3px 8px',
             borderRadius: 6, letterSpacing: '0.05em'
-          }}>ANALYTICS</span>
-          <span style={{ color: '#A6A6B2', fontSize: 13 }}>Cross-Organization Intelligence</span>
+          }}>{t('superAdmin.analyticsPage.badge')}</span>
+          <span style={{ color: '#A6A6B2', fontSize: 13 }}>{t('superAdmin.analyticsPage.subBadge')}</span>
         </div>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: '#FFF', margin: 0 }}>
-          Global Platform Analytics
+          {t('superAdmin.analyticsPage.title')}
         </h2>
         <p style={{ color: '#A6A6B2', fontSize: 13, marginTop: 4, marginBottom: 0 }}>
-          30-day trends, revenue metrics, and per-school performance comparisons.
+          {t('superAdmin.analyticsPage.subtitle')}
         </p>
       </div>
 
       {/* Top KPI Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-        <StatCard title="Total Organizations" value={ov.totalOrgs} sub={`${ov.activeOrgs} active`} icon={Building2} color="#FFD60A" />
-        <StatCard title="Platform Users" value={ov.totalUsers} sub={`+${trends.newUsers7d} this week`} icon={Users} color="#30D158" />
-        <StatCard title="Enrolled Students" value={ov.totalStudents} sub={`+${trends.newStudents7d} this week`} icon={GraduationCap} color="#0A84FF" />
-        <StatCard title="Total Fleet" value={ov.totalBuses} sub={`${ov.activeTrips} trips in progress`} icon={Bus} color="#BF5AF2" />
+        <StatCard title={t('superAdmin.analyticsPage.totalOrgsTitle')} value={ov.totalOrgs} sub={t('superAdmin.analyticsPage.activeSub', { count: ov.activeOrgs })} icon={Building2} color="#FFD60A" />
+        <StatCard title={t('superAdmin.analyticsPage.platformUsersTitle')} value={ov.totalUsers} sub={t('superAdmin.analyticsPage.usersThisWeek', { count: trends.newUsers7d })} icon={Users} color="#30D158" />
+        <StatCard title={t('superAdmin.analyticsPage.enrolledStudentsTitle')} value={ov.totalStudents} sub={t('superAdmin.analyticsPage.studentsThisWeek', { count: trends.newStudents7d })} icon={GraduationCap} color="#0A84FF" />
+        <StatCard title={t('superAdmin.analyticsPage.totalFleetTitle')} value={ov.totalBuses} sub={t('superAdmin.analyticsPage.tripsInProgress', { count: ov.activeTrips })} icon={Bus} color="#BF5AF2" />
       </div>
 
       {/* Second Row: Trips & Revenue */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-        <StatCard title="Trips (30 days)" value={trends.completedTrips30d} sub={`${ov.totalTrips} all-time`} icon={Activity} color="#FF9F0A" />
-        <StatCard title="Attendance Events" value={trends.totalAttendances30d} sub="Last 30 days" icon={TrendingUp} color="#30D158" />
-        <StatCard title="Revenue Collected" value={`RM ${revenue.totalPaid.toLocaleString()}`} sub={`${revenue.paidInvoices} paid invoices`} icon={DollarSign} color="#FFD60A" />
+        <StatCard title={t('superAdmin.analyticsPage.trips30DaysTitle')} value={trends.completedTrips30d} sub={t('superAdmin.analyticsPage.allTimeSub', { count: ov.totalTrips })} icon={Activity} color="#FF9F0A" />
+        <StatCard title={t('superAdmin.analyticsPage.attendanceTitle')} value={trends.totalAttendances30d} sub={t('superAdmin.analyticsPage.attendanceSub')} icon={TrendingUp} color="#30D158" />
+        <StatCard title={t('superAdmin.analyticsPage.revenueTitle')} value={`RM ${revenue.totalPaid.toLocaleString()}`} sub={t('superAdmin.analyticsPage.paidInvoicesSub', { count: revenue.paidInvoices })} icon={DollarSign} color="#FFD60A" />
         <StatCard
-          title="Active Emergencies"
+          title={t('superAdmin.analyticsPage.emergenciesTitle')}
           value={ov.unresolvedEmergencies}
-          sub={ov.unresolvedEmergencies === 0 ? 'All clear' : 'Needs attention'}
+          sub={ov.unresolvedEmergencies === 0 ? t('superAdmin.analyticsPage.allClear') : t('superAdmin.analyticsPage.needsAttention')}
           icon={AlertTriangle}
           color={ov.unresolvedEmergencies > 0 ? '#FF453A' : '#30D158'}
         />
@@ -151,17 +153,18 @@ export default function GlobalAnalyticsTab() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
             <PieChart size={18} color="#BF5AF2" />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>User Role Distribution</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>{t('superAdmin.analyticsPage.userRoleDistTitle')}</h3>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {Object.entries(roleBreakdown).map(([role, count]) => {
               const total = Object.values(roleBreakdown).reduce((a, b) => a + b, 0)
               const pct = total > 0 ? Math.round((count / total) * 100) : 0
               const color = ROLE_COLORS[role] || '#A6A6B2'
+              const roleLabel = t(`superAdmin.roles.${role}`) || role.replace(/_/g, ' ')
               return (
                 <div key={role} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 90, fontSize: 12, fontWeight: 600, color: '#A6A6B2' }}>
-                    {role.replace(/_/g, ' ')}
+                    {roleLabel}
                   </div>
                   <div style={{ flex: 1, height: 8, background: '#1C1C21', borderRadius: 4, overflow: 'hidden' }}>
                     <div style={{
@@ -188,12 +191,12 @@ export default function GlobalAnalyticsTab() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
             <BarChart3 size={18} color="#0A84FF" />
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>Trip Status (30 Days)</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>{t('superAdmin.analyticsPage.tripStatus30DaysTitle')}</h3>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {Object.entries(tripBreakdown).length === 0 ? (
               <div style={{ color: '#6E6E7A', fontSize: 13, textAlign: 'center', padding: 20 }}>
-                No trip data in the last 30 days
+                {t('superAdmin.analyticsPage.noTripData')}
               </div>
             ) : Object.entries(tripBreakdown).map(([status, count]) => {
               const total = Object.values(tripBreakdown).reduce((a, b) => a + b, 0)
@@ -231,21 +234,28 @@ export default function GlobalAnalyticsTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
           <Building2 size={18} color="#FFD60A" />
           <h3 style={{ fontSize: 16, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Organization Performance Comparison
+            {t('superAdmin.analyticsPage.orgPerfTitle')}
           </h3>
         </div>
 
         {orgBreakdown.length === 0 ? (
           <div style={{ color: '#6E6E7A', fontSize: 13, textAlign: 'center', padding: 30 }}>
-            No organizations yet
+            {t('superAdmin.analyticsPage.noOrgs')}
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #26262C' }}>
-                  {['School', 'Tier', 'Users', 'Students', 'Buses', 'Routes'].map(h => (
-                    <th key={h} style={{
+                  {[
+                    t('superAdmin.analyticsPage.tableHeaders.school'),
+                    t('superAdmin.analyticsPage.tableHeaders.tier'),
+                    t('superAdmin.analyticsPage.tableHeaders.users'),
+                    t('superAdmin.analyticsPage.tableHeaders.students'),
+                    t('superAdmin.analyticsPage.tableHeaders.buses'),
+                    t('superAdmin.analyticsPage.tableHeaders.routes')
+                  ].map((h, idx) => (
+                    <th key={idx} style={{
                       padding: '10px 14px', textAlign: 'left',
                       fontSize: 11, fontWeight: 700, color: '#6E6E7A',
                       textTransform: 'uppercase', letterSpacing: '0.05em'
@@ -263,7 +273,7 @@ export default function GlobalAnalyticsTab() {
                         <span style={{
                           fontSize: 11, fontWeight: 700, padding: '3px 8px',
                           borderRadius: 6, background: tier.bg, color: tier.color
-                        }}>{org.subscriptionTier}</span>
+                        }}>{t(`superAdmin.tiers.${org.subscriptionTier}`) || org.subscriptionTier}</span>
                       </td>
                       <td style={{ padding: '12px 14px', color: '#A6A6B2' }}>{org._count.users}</td>
                       <td style={{ padding: '12px 14px', color: '#A6A6B2' }}>{org._count.students}</td>

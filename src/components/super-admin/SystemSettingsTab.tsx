@@ -5,8 +5,10 @@ import {
   Settings, Mail, MessageSquare, PhoneCall, ShieldAlert, CheckCircle, 
   AlertCircle, Key, RefreshCw, Radio, Download, Sliders, Save, Database
 } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 export default function SuperAdminSystemSettingsTab() {
+  const { t } = useTranslation()
   const [testEmail, setTestEmail] = useState('')
   const [testPhone, setTestPhone] = useState('')
   const [loadingComms, setLoadingComms] = useState(false)
@@ -46,11 +48,11 @@ export default function SuperAdminSystemSettingsTab() {
 
   const handleTestComms = async (type: 'email' | 'whatsapp' | 'sms') => {
     if (type === 'email' && !testEmail) {
-      showToast('Please enter an email address', 'error')
+      showToast(t('superAdmin.settingsPage.toastEnterEmail'), 'error')
       return
     }
     if ((type === 'whatsapp' || type === 'sms') && !testPhone) {
-      showToast('Please enter a phone number', 'error')
+      showToast(t('superAdmin.settingsPage.toastEnterPhone'), 'error')
       return
     }
 
@@ -66,12 +68,12 @@ export default function SuperAdminSystemSettingsTab() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(`Test ${type.toUpperCase()} dispatched successfully!`)
+        showToast(t('superAdmin.settingsPage.toastCommsDispatched', { type: type.toUpperCase() }))
       } else {
-        showToast(data.error || `Failed to dispatch ${type}`, 'error')
+        showToast(data.error || t('superAdmin.settingsPage.toastCommsFailed', { type }), 'error')
       }
     } catch {
-      showToast('Network error testing communications', 'error')
+      showToast(t('superAdmin.settingsPage.toastCommsNetworkError'), 'error')
     } finally {
       setLoadingComms(false)
     }
@@ -87,14 +89,14 @@ export default function SuperAdminSystemSettingsTab() {
         body: JSON.stringify({ maintenanceMode: nextState })
       })
       if (res.ok) {
-        showToast(nextState ? 'Global maintenance lock ACTIVATED' : 'Global maintenance lock DISABLED', 'success')
+        showToast(nextState ? t('superAdmin.settingsPage.toastMaintenanceActivated') : t('superAdmin.settingsPage.toastMaintenanceDeactivated'), 'success')
       } else {
         setMaintenanceMode(!nextState)
-        showToast('Failed to update maintenance mode', 'error')
+        showToast(t('superAdmin.settingsPage.toastMaintenanceFailed'), 'error')
       }
     } catch {
       setMaintenanceMode(!nextState)
-      showToast('Network error updating maintenance state', 'error')
+      showToast(t('superAdmin.settingsPage.toastMaintenanceNetworkError'), 'error')
     }
   }
 
@@ -111,12 +113,12 @@ export default function SuperAdminSystemSettingsTab() {
         })
       })
       if (res.ok) {
-        showToast('Platform configuration saved successfully!')
+        showToast(t('superAdmin.settingsPage.toastConfigSaved'))
       } else {
-        showToast('Failed to save platform configuration', 'error')
+        showToast(t('superAdmin.settingsPage.toastConfigFailed'), 'error')
       }
     } catch {
-      showToast('Network error saving configuration', 'error')
+      showToast(t('superAdmin.settingsPage.toastConfigNetworkError'), 'error')
     } finally {
       setSavingSettings(false)
     }
@@ -128,12 +130,12 @@ export default function SuperAdminSystemSettingsTab() {
       const res = await fetch('/api/admin/settings/flush-cache', { method: 'POST' })
       const data = await res.json()
       if (res.ok) {
-        showToast(data.message || 'Redis telematics cache flushed successfully!')
+        showToast(data.message || t('superAdmin.settingsPage.toastCacheFlushed'))
       } else {
-        showToast(data.error || 'Failed to flush cache', 'error')
+        showToast(data.error || t('superAdmin.settingsPage.toastCacheFailed'), 'error')
       }
     } catch {
-      showToast('Network error flushing telemetry cache', 'error')
+      showToast(t('superAdmin.settingsPage.toastCacheNetworkError'), 'error')
     } finally {
       setFlushingCache(false)
     }
@@ -153,9 +155,9 @@ export default function SuperAdminSystemSettingsTab() {
       a.click()
       a.remove()
       window.URL.revokeObjectURL(url)
-      showToast(`Exported ${type} to CSV successfully!`)
+      showToast(t('superAdmin.settingsPage.toastExportedCsv', { type }))
     } catch {
-      showToast(`Failed to export ${type}`, 'error')
+      showToast(t('superAdmin.settingsPage.toastExportFailed', { type }), 'error')
     } finally {
       setExporting(null)
     }
@@ -195,11 +197,11 @@ export default function SuperAdminSystemSettingsTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Radio size={20} color="#FFD60A" />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Communications Gateway Test Suite
+            {t('superAdmin.settingsPage.commsSuiteTitle')}
           </h3>
         </div>
         <p style={{ color: '#A6A6B2', fontSize: 13, marginBottom: 20 }}>
-          Verify and diagnose external messaging providers (Brevo Email, Twilio / WhatsApp, SMS OTP relays).
+          {t('superAdmin.settingsPage.commsSuiteSub')}
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
@@ -207,11 +209,11 @@ export default function SuperAdminSystemSettingsTab() {
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <Mail size={16} color="#0A84FF" />
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#FFF' }}>Test Email Gateway</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#FFF' }}>{t('superAdmin.settingsPage.testEmailTitle')}</span>
             </div>
             <input
               type="email"
-              placeholder="developer@ridesafe.com"
+              placeholder={t('superAdmin.settingsPage.emailPlaceholder')}
               value={testEmail}
               onChange={e => setTestEmail(e.target.value)}
               style={{
@@ -230,7 +232,7 @@ export default function SuperAdminSystemSettingsTab() {
                 opacity: loadingComms ? 0.7 : 1
               }}
             >
-              Send Diagnostic Email
+              {t('superAdmin.settingsPage.sendEmailBtn')}
             </button>
           </div>
 
@@ -238,11 +240,11 @@ export default function SuperAdminSystemSettingsTab() {
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <MessageSquare size={16} color="#30D158" />
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#FFF' }}>Test WhatsApp / SMS Gateway</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: '#FFF' }}>{t('superAdmin.settingsPage.testPhoneTitle')}</span>
             </div>
             <input
               type="tel"
-              placeholder="+60123456789"
+              placeholder={t('superAdmin.settingsPage.phonePlaceholder')}
               value={testPhone}
               onChange={e => setTestPhone(e.target.value)}
               style={{
@@ -262,7 +264,7 @@ export default function SuperAdminSystemSettingsTab() {
                   opacity: loadingComms ? 0.7 : 1
                 }}
               >
-                Test WhatsApp
+                {t('superAdmin.settingsPage.testWhatsappBtn')}
               </button>
               <button
                 onClick={() => handleTestComms('sms')}
@@ -274,7 +276,7 @@ export default function SuperAdminSystemSettingsTab() {
                   opacity: loadingComms ? 0.7 : 1
                 }}
               >
-                Test SMS
+                {t('superAdmin.settingsPage.testSmsBtn')}
               </button>
             </div>
           </div>
@@ -291,20 +293,20 @@ export default function SuperAdminSystemSettingsTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Sliders size={20} color="#FFD60A" />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Platform Global Policy Configuration
+            {t('superAdmin.settingsPage.policyTitle')}
           </h3>
         </div>
         <p style={{ color: '#A6A6B2', fontSize: 13, marginBottom: 20 }}>
-          Manage cross-tenant safety rules, speed limits, and onboarding policy.
+          {t('superAdmin.settingsPage.policySub')}
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
             <label style={{ display: 'block', color: '#FFF', fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
-              Default Speed Limit Warning (km/h)
+              {t('superAdmin.settingsPage.speedLimitLabel')}
             </label>
             <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 12 }}>
-              Trips exceeding this threshold trigger instant speeding alerts to School Admin.
+              {t('superAdmin.settingsPage.speedLimitSub')}
             </p>
             <input
               type="number"
@@ -320,10 +322,10 @@ export default function SuperAdminSystemSettingsTab() {
 
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
             <label style={{ display: 'block', color: '#FFF', fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
-              Default Geofence Radius (meters)
+              {t('superAdmin.settingsPage.geofenceLabel')}
             </label>
             <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 12 }}>
-              Radius around school campus or stops for arrival/departure proximity detection.
+              {t('superAdmin.settingsPage.geofenceSub')}
             </p>
             <input
               type="number"
@@ -339,10 +341,10 @@ export default function SuperAdminSystemSettingsTab() {
 
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
             <label style={{ display: 'block', color: '#FFF', fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
-              Tenant Auto-Provisioning
+              {t('superAdmin.settingsPage.autoProvLabel')}
             </label>
             <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 12 }}>
-              Automatically create default admin account and free tier quotas on new tenant creation.
+              {t('superAdmin.settingsPage.autoProvSub')}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
               <button
@@ -355,10 +357,10 @@ export default function SuperAdminSystemSettingsTab() {
                   fontWeight: 700, fontSize: 13, cursor: 'pointer'
                 }}
               >
-                {autoProvisioning ? 'ENABLED' : 'DISABLED'}
+                {autoProvisioning ? t('superAdmin.settingsPage.statusEnabled') : t('superAdmin.settingsPage.statusDisabled')}
               </button>
               <span style={{ fontSize: 13, color: '#A6A6B2' }}>
-                {autoProvisioning ? 'Active for new schools' : 'Manual setup required'}
+                {autoProvisioning ? t('superAdmin.settingsPage.autoProvActive') : t('superAdmin.settingsPage.autoProvManual')}
               </span>
             </div>
           </div>
@@ -377,7 +379,7 @@ export default function SuperAdminSystemSettingsTab() {
             }}
           >
             <Save size={16} />
-            {savingSettings ? 'Saving...' : 'Save Platform Policy'}
+            {savingSettings ? t('superAdmin.settingsPage.saving') : t('superAdmin.settingsPage.savePolicyBtn')}
           </button>
         </div>
       </div>
@@ -392,11 +394,11 @@ export default function SuperAdminSystemSettingsTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <ShieldAlert size={20} color="#FF453A" />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Platform Controls & Maintenance Mode
+            {t('superAdmin.settingsPage.maintenanceTitle')}
           </h3>
         </div>
         <p style={{ color: '#A6A6B2', fontSize: 13, marginBottom: 20 }}>
-          Global switches that affect the entire multi-tenant application ecosystem.
+          {t('superAdmin.settingsPage.maintenanceSub')}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -405,9 +407,9 @@ export default function SuperAdminSystemSettingsTab() {
             padding: '16px 20px', background: '#1C1C21', borderRadius: 10, flexWrap: 'wrap', gap: 12
           }}>
             <div>
-              <div style={{ color: '#FFF', fontWeight: 600, fontSize: 14 }}>Global Maintenance Lock</div>
+              <div style={{ color: '#FFF', fontWeight: 600, fontSize: 14 }}>{t('superAdmin.settingsPage.maintenanceLockTitle')}</div>
               <div style={{ color: '#6E6E7A', fontSize: 12, marginTop: 2 }}>
-                Persistently restrict parent and driver app access during core database migrations.
+                {t('superAdmin.settingsPage.maintenanceLockSub')}
               </div>
             </div>
             <button
@@ -418,7 +420,7 @@ export default function SuperAdminSystemSettingsTab() {
                 fontWeight: 600, fontSize: 13, cursor: 'pointer'
               }}
             >
-              {maintenanceMode ? 'ACTIVE (Locked)' : 'DISABLED (Normal)'}
+              {maintenanceMode ? t('superAdmin.settingsPage.maintenanceActive') : t('superAdmin.settingsPage.maintenanceDisabled')}
             </button>
           </div>
 
@@ -427,9 +429,9 @@ export default function SuperAdminSystemSettingsTab() {
             padding: '16px 20px', background: '#1C1C21', borderRadius: 10, flexWrap: 'wrap', gap: 12
           }}>
             <div>
-              <div style={{ color: '#FFF', fontWeight: 600, fontSize: 14 }}>Clear Redis Telematics Cache</div>
+              <div style={{ color: '#FFF', fontWeight: 600, fontSize: 14 }}>{t('superAdmin.settingsPage.clearCacheTitle')}</div>
               <div style={{ color: '#6E6E7A', fontSize: 12, marginTop: 2 }}>
-                Flush stuck driver GPS positions or cached route polylines across all schools via backend.
+                {t('superAdmin.settingsPage.clearCacheSub')}
               </div>
             </div>
             <button
@@ -444,7 +446,7 @@ export default function SuperAdminSystemSettingsTab() {
               }}
             >
               <RefreshCw size={14} className={flushingCache ? 'animate-spin' : ''} />
-              {flushingCache ? 'Flushing...' : 'Flush Cache'}
+              {flushingCache ? t('superAdmin.settingsPage.flushing') : t('superAdmin.settingsPage.flushCacheBtn')}
             </button>
           </div>
         </div>
@@ -460,17 +462,17 @@ export default function SuperAdminSystemSettingsTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <Database size={20} color="#0A84FF" />
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Super Admin Data Export Suite
+            {t('superAdmin.settingsPage.exportSuiteTitle')}
           </h3>
         </div>
         <p style={{ color: '#A6A6B2', fontSize: 13, marginBottom: 20 }}>
-          Export sanitized CSV snapshots of global entities for compliance, billing reconciliations, and reporting.
+          {t('superAdmin.settingsPage.exportSuiteSub')}
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
-            <h4 style={{ color: '#FFF', margin: '0 0 6px', fontSize: 14, fontWeight: 600 }}>Global Users Directory</h4>
-            <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 14 }}>All roles, org links, contact info, login status.</p>
+            <h4 style={{ color: '#FFF', margin: '0 0 6px', fontSize: 14, fontWeight: 600 }}>{t('superAdmin.settingsPage.exportUsersTitle')}</h4>
+            <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 14 }}>{t('superAdmin.settingsPage.exportUsersSub')}</p>
             <button
               onClick={() => handleExportCSV('users')}
               disabled={exporting !== null}
@@ -483,13 +485,13 @@ export default function SuperAdminSystemSettingsTab() {
               }}
             >
               <Download size={14} color="#0A84FF" />
-              {exporting === 'users' ? 'Exporting...' : 'Export Users CSV'}
+              {exporting === 'users' ? t('superAdmin.settingsPage.exporting') : t('superAdmin.settingsPage.exportUsersBtn')}
             </button>
           </div>
 
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
-            <h4 style={{ color: '#FFF', margin: '0 0 6px', fontSize: 14, fontWeight: 600 }}>Tenants & Organizations</h4>
-            <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 14 }}>Subscription tiers, quota allocations, addresses.</p>
+            <h4 style={{ color: '#FFF', margin: '0 0 6px', fontSize: 14, fontWeight: 600 }}>{t('superAdmin.settingsPage.exportTenantsTitle')}</h4>
+            <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 14 }}>{t('superAdmin.settingsPage.exportTenantsSub')}</p>
             <button
               onClick={() => handleExportCSV('organizations')}
               disabled={exporting !== null}
@@ -502,13 +504,13 @@ export default function SuperAdminSystemSettingsTab() {
               }}
             >
               <Download size={14} color="#30D158" />
-              {exporting === 'organizations' ? 'Exporting...' : 'Export Tenants CSV'}
+              {exporting === 'organizations' ? t('superAdmin.settingsPage.exporting') : t('superAdmin.settingsPage.exportTenantsBtn')}
             </button>
           </div>
 
           <div style={{ background: '#1C1C21', padding: 18, borderRadius: 12, border: '1px solid #26262C' }}>
-            <h4 style={{ color: '#FFF', margin: '0 0 6px', fontSize: 14, fontWeight: 600 }}>Security Audit Trail</h4>
-            <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 14 }}>Action log records, actor IDs, IP timestamps.</p>
+            <h4 style={{ color: '#FFF', margin: '0 0 6px', fontSize: 14, fontWeight: 600 }}>{t('superAdmin.settingsPage.exportAuditTitle')}</h4>
+            <p style={{ color: '#6E6E7A', fontSize: 12, marginBottom: 14 }}>{t('superAdmin.settingsPage.exportAuditSub')}</p>
             <button
               onClick={() => handleExportCSV('audit-logs')}
               disabled={exporting !== null}
@@ -521,7 +523,7 @@ export default function SuperAdminSystemSettingsTab() {
               }}
             >
               <Download size={14} color="#FFD60A" />
-              {exporting === 'audit-logs' ? 'Exporting...' : 'Export Audit Log CSV'}
+              {exporting === 'audit-logs' ? t('superAdmin.settingsPage.exporting') : t('superAdmin.settingsPage.exportAuditBtn')}
             </button>
           </div>
         </div>

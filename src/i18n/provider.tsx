@@ -14,11 +14,11 @@ const labels: Record<string, string> = { en: 'EN', ms: 'BM', zh: 'ZH' }
 interface I18nContextType {
   locale: Locale
   setLocale: (l: Locale) => void
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, string | number>) => string
 }
 
 const I18nContext = createContext<I18nContextType>({
-  locale: 'en', setLocale: () => {}, t: (k) => k
+  locale: 'en', setLocale: () => { }, t: (k) => k
 })
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -39,7 +39,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       if (d?.user?.locale && translationMap[d.user.locale as Locale]) {
         setLocaleState(d.user.locale as Locale)
       }
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
   const setLocale = useCallback((l: Locale) => {
@@ -49,10 +49,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     // browser into a different role/session. No-ops (401) when logged out.
     fetch('/api/auth/me', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locale: l }),
-    }).catch(() => {})
+    }).catch(() => { })
   }, [])
 
-  const t = useCallback((key: string): string => {
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     const parts = key.split('.')
     let result: unknown = translationMap[locale]
     for (const part of parts) {
@@ -61,10 +61,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         // Fallback to English
         let fallback: unknown = translationMap.en
         for (const p of parts) { fallback = (fallback as Record<string, unknown>)?.[p] }
-        return (fallback as string) || key
+        result = (fallback as string) || key
+        break
       }
     }
-    return result as string
+    
+    let str = result as string;
+    if (params && typeof str === 'string') {
+      for (const [k, v] of Object.entries(params)) {
+        str = str.replace(new RegExp(`{{${k}}}`, 'g'), String(v))
+      }
+    }
+    return str
   }, [locale])
 
   return (
@@ -81,10 +89,10 @@ export function useTranslation() {
 export function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation()
   return (
-    <div style={{ display:'flex', gap:4, background:'var(--surface)', padding:'4px', borderRadius:'10px', border:'1px solid var(--surface-border)' }}>
+    <div style={{ display: 'flex', gap: 4, background: 'var(--surface)', padding: '4px', borderRadius: '10px', border: '1px solid var(--surface-border)' }}>
       {(['en', 'ms', 'zh'] as Locale[]).map(lang => (
         <button key={lang} onClick={() => setLocale(lang)}
-          style={{ padding:'5px 10px', fontSize:'0.73rem', fontWeight:700, border:'none', background: locale === lang ? '#FFD60A' : 'transparent', color: locale === lang ? '#08080A' : 'var(--text-muted)', borderRadius:'7px', cursor:'pointer', transition:'all 0.15s ease', letterSpacing:'0.04em' }}>
+          style={{ padding: '5px 10px', fontSize: '0.73rem', fontWeight: 700, border: 'none', background: locale === lang ? '#FFD60A' : 'transparent', color: locale === lang ? '#08080A' : 'var(--text-muted)', borderRadius: '7px', cursor: 'pointer', transition: 'all 0.15s ease', letterSpacing: '0.04em' }}>
           {labels[lang]}
         </button>
       ))}

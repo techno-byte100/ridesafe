@@ -6,6 +6,7 @@ import {
   UserPlus, Trash2, Pencil, Building2, Settings, ShieldCheck,
   Clock, AlertCircle
 } from 'lucide-react'
+import { useTranslation } from '@/i18n/provider'
 
 interface AuditEntry {
   id: string
@@ -33,6 +34,7 @@ const ACTION_STYLES: Record<string, { color: string; bg: string; icon: typeof Us
 const DEFAULT_STYLE = { color: '#A6A6B2', bg: 'rgba(166,166,178,0.12)', icon: FileText }
 
 export default function AuditLogTab() {
+  const { t } = useTranslation()
   const [logs, setLogs] = useState<AuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -93,13 +95,13 @@ export default function AuditLogTab() {
               background: '#BF5AF2', color: '#FFF',
               fontSize: 11, fontWeight: 800, padding: '3px 8px',
               borderRadius: 6, letterSpacing: '0.05em'
-            }}>AUDIT TRAIL</span>
+            }}>{t('superAdmin.auditPage.badge')}</span>
           </div>
           <h2 style={{ fontSize: 22, fontWeight: 700, color: '#FFF', margin: 0 }}>
-            Activity Audit Log
+            {t('superAdmin.auditPage.title')}
           </h2>
           <p style={{ color: '#A6A6B2', fontSize: 13, marginTop: 4, marginBottom: 0 }}>
-            {total} total entries · Track every Super Admin action across the platform.
+            {t('superAdmin.auditPage.subtitle', { count: total })}
           </p>
         </div>
       </div>
@@ -110,7 +112,7 @@ export default function AuditLogTab() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Filter size={14} color="#A6A6B2" />
-          <span style={{ fontSize: 12, color: '#6E6E7A', fontWeight: 600 }}>Filters:</span>
+          <span style={{ fontSize: 12, color: '#6E6E7A', fontWeight: 600 }}>{t('superAdmin.auditPage.filtersLabel')}</span>
         </div>
         <select
           value={filterAction}
@@ -121,15 +123,15 @@ export default function AuditLogTab() {
             fontSize: 13, outline: 'none', minWidth: 160
           }}
         >
-          <option value="">All Actions</option>
-          <option value="CREATE_USER">Create User</option>
-          <option value="UPDATE_USER">Update User</option>
-          <option value="DELETE_USER">Delete User</option>
-          <option value="CREATE_ORG">Create Organization</option>
-          <option value="UPDATE_ORG">Update Organization</option>
-          <option value="DELETE_ORG">Delete Organization</option>
-          <option value="UPDATE_SETTINGS">Update Settings</option>
-          <option value="TOGGLE_MAINTENANCE">Toggle Maintenance</option>
+          <option value="">{t('superAdmin.auditPage.allActions')}</option>
+          <option value="CREATE_USER">{t('superAdmin.auditPage.actionsMap.CREATE_USER')}</option>
+          <option value="UPDATE_USER">{t('superAdmin.auditPage.actionsMap.UPDATE_USER')}</option>
+          <option value="DELETE_USER">{t('superAdmin.auditPage.actionsMap.DELETE_USER')}</option>
+          <option value="CREATE_ORG">{t('superAdmin.auditPage.actionsMap.CREATE_ORG')}</option>
+          <option value="UPDATE_ORG">{t('superAdmin.auditPage.actionsMap.UPDATE_ORG')}</option>
+          <option value="DELETE_ORG">{t('superAdmin.auditPage.actionsMap.DELETE_ORG')}</option>
+          <option value="UPDATE_SETTINGS">{t('superAdmin.auditPage.actionsMap.UPDATE_SETTINGS')}</option>
+          <option value="TOGGLE_MAINTENANCE">{t('superAdmin.auditPage.actionsMap.TOGGLE_MAINTENANCE')}</option>
         </select>
 
         <select
@@ -141,10 +143,10 @@ export default function AuditLogTab() {
             fontSize: 13, outline: 'none', minWidth: 160
           }}
         >
-          <option value="">All Targets</option>
-          <option value="User">User</option>
-          <option value="Organization">Organization</option>
-          <option value="SystemSetting">System Settings</option>
+          <option value="">{t('superAdmin.auditPage.allTargets')}</option>
+          <option value="User">{t('superAdmin.auditPage.targetsMap.User')}</option>
+          <option value="Organization">{t('superAdmin.auditPage.targetsMap.Organization')}</option>
+          <option value="SystemSetting">{t('superAdmin.auditPage.targetsMap.SystemSetting')}</option>
         </select>
       </div>
 
@@ -161,15 +163,15 @@ export default function AuditLogTab() {
               animation: 'spin 0.8s linear infinite',
               margin: '0 auto 12px'
             }} />
-            <span style={{ color: '#6E6E7A', fontSize: 13 }}>Loading audit entries...</span>
+            <span style={{ color: '#6E6E7A', fontSize: 13 }}>{t('superAdmin.auditPage.loading')}</span>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : logs.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
             <FileText size={40} color="#26262C" style={{ marginBottom: 12 }} />
-            <div style={{ color: '#A6A6B2', fontWeight: 600, fontSize: 15 }}>No audit entries found</div>
+            <div style={{ color: '#A6A6B2', fontWeight: 600, fontSize: 15 }}>{t('superAdmin.auditPage.noEntriesTitle')}</div>
             <div style={{ color: '#6E6E7A', fontSize: 13, marginTop: 4 }}>
-              Actions will be logged as you manage the platform.
+              {t('superAdmin.auditPage.noEntriesSub')}
             </div>
           </div>
         ) : (
@@ -180,8 +182,14 @@ export default function AuditLogTab() {
               padding: '12px 20px', background: '#0E0E11',
               borderBottom: '1px solid #26262C', gap: 10
             }}>
-              {['Action', 'Performed By', 'Target', 'Date', ''].map(h => (
-                <span key={h} style={{
+              {[
+                t('superAdmin.auditPage.tableHeaders.action'),
+                t('superAdmin.auditPage.tableHeaders.performedBy'),
+                t('superAdmin.auditPage.tableHeaders.target'),
+                t('superAdmin.auditPage.tableHeaders.date'),
+                ''
+              ].map((h, idx) => (
+                <span key={idx} style={{
                   fontSize: 11, fontWeight: 700, color: '#6E6E7A',
                   textTransform: 'uppercase', letterSpacing: '0.05em'
                 }}>{h}</span>
@@ -194,6 +202,8 @@ export default function AuditLogTab() {
               const Icon = style.icon
               const expanded = expandedId === log.id
               const details = parseDetails(log.details)
+              const actionName = t(`superAdmin.auditPage.actionsMap.${log.action}`) || log.action.replace(/_/g, ' ')
+              const userRoleName = t(`superAdmin.roles.${log.user.role}`) || log.user.role.replace(/_/g, ' ')
 
               return (
                 <div key={log.id}>
@@ -218,7 +228,7 @@ export default function AuditLogTab() {
                       </div>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#FFF' }}>
-                          {log.action.replace(/_/g, ' ')}
+                          {actionName}
                         </div>
                         {log.targetId && (
                           <div style={{ fontSize: 11, color: '#6E6E7A', fontFamily: "'JetBrains Mono', monospace" }}>
@@ -231,7 +241,7 @@ export default function AuditLogTab() {
                     {/* Performed By */}
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500, color: '#FFF' }}>{log.user.name}</div>
-                      <div style={{ fontSize: 11, color: '#6E6E7A' }}>{log.user.role.replace(/_/g, ' ')}</div>
+                      <div style={{ fontSize: 11, color: '#6E6E7A' }}>{userRoleName}</div>
                     </div>
 
                     {/* Target */}
@@ -241,7 +251,7 @@ export default function AuditLogTab() {
                       background: style.bg, color: style.color,
                       display: 'inline-block', width: 'fit-content'
                     }}>
-                      {log.target || '—'}
+                      {log.target ? (t(`superAdmin.auditPage.targetsMap.${log.target}`) || log.target) : '—'}
                     </span>
 
                     {/* Date */}
@@ -275,7 +285,7 @@ export default function AuditLogTab() {
                           borderBottom: '1px solid #1C1C21'
                         }}>
                           <div style={{ fontSize: 11, fontWeight: 700, color: '#6E6E7A', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                            Change Details
+                            {t('superAdmin.auditPage.changeDetails')}
                           </div>
                           <pre style={{
                             fontFamily: "'JetBrains Mono', monospace",
@@ -315,7 +325,7 @@ export default function AuditLogTab() {
             <ChevronLeft size={16} />
           </button>
           <span style={{ fontSize: 13, color: '#A6A6B2' }}>
-            Page {page} of {totalPages}
+            {t('superAdmin.auditPage.pagination', { page, total: totalPages })}
           </span>
           <button
             disabled={page >= totalPages}
