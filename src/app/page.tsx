@@ -307,11 +307,13 @@ export default function LoginPage() {
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', color: HC.text3, textTransform: 'uppercase', marginBottom: 10 }}>
               {t('auth.demoAccounts')}
             </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               {[
-                { label: t('auth.adminDemo'), email: 'admin@ridesafe.com' },
-                { label: t('auth.driverDemo'), email: 'driver@ridesafe.com' },
-                { label: t('auth.parentDemo'), email: 'parent1@ridesafe.com' },
+                { label: 'Super Admin', email: 'admin@ridesafe.com', color: '#FFD60A' },
+                { label: 'School Admin', email: 'schooladmin@ridesafe.com', color: '#0A84FF' },
+                { label: 'Desk Admin', email: 'deskadmin@ridesafe.com', color: '#FF9F0A' },
+                { label: t('auth.driverDemo'), email: 'driver@ridesafe.com', color: '#30D158' },
+                { label: t('auth.parentDemo'), email: 'parent1@ridesafe.com', color: '#BF5AF2' },
               ].map((r) => (
                 <button
                   key={r.email}
@@ -321,19 +323,19 @@ export default function LoginPage() {
                     setPassword('password123')
                   }}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', padding: '5px 12px',
-                    borderRadius: HC.pill, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.04em',
-                    background: 'rgba(255,214,10,0.15)',
-                    color: HC.yellow,
-                    border: `1px solid rgba(255,214,10,0.3)`,
+                    display: 'inline-flex', alignItems: 'center', padding: '6px 12px',
+                    borderRadius: HC.pill, fontSize: 11.5, fontWeight: 700, letterSpacing: '0.03em',
+                    background: `${r.color}15`,
+                    color: r.color,
+                    border: `1px solid ${r.color}40`,
                     cursor: 'pointer',
                     transition: 'all 0.2s'
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,214,10,0.25)'
+                    e.currentTarget.style.background = `${r.color}30`
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,214,10,0.15)'
+                    e.currentTarget.style.background = `${r.color}15`
                   }}
                 >
                   {r.label}

@@ -16,7 +16,30 @@ export async function POST(req: NextRequest) {
     }
     const { email, password } = validation.data
 
-    const user = await prisma.user.findUnique({ where: { email } })
+    let user = await prisma.user.findUnique({ where: { email } })
+
+    // If demo account doesn't exist yet on this database, auto-provision it with standard seed password
+    if (!user && password === 'password123') {
+      const DEMO_USERS: Record<string, { name: string; role: string }> = {
+        'admin@ridesafe.com':       { name: 'Master Super Admin', role: 'SUPER_ADMIN' },
+        'superadmin@ridesafe.com':  { name: 'Master Super Admin', role: 'SUPER_ADMIN' },
+        'schooladmin@ridesafe.com': { name: 'Principal School Admin', role: 'SCHOOL_ADMIN' },
+        'deskadmin@ridesafe.com':   { name: 'Desk Staff Admin', role: 'ADMIN' },
+        'driver@ridesafe.com':      { name: 'John Driver', role: 'DRIVER' },
+        'parent1@ridesafe.com':     { name: 'Alice Parent', role: 'PARENT' },
+      }
+      if (DEMO_USERS[email]) {
+        const passwordHash = await bcrypt.hash('password123', 10)
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: DEMO_USERS[email].name,
+            role: DEMO_USERS[email].role,
+            password: passwordHash,
+          }
+        })
+      }
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
