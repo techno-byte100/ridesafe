@@ -1,0 +1,28 @@
+# ==============================================================================
+# GitHub Code Owners Configuration
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# ==============================================================================
+
+# Global fallback (repo owners)
+* @techno-byte100 @Sakthi-m35
+
+# 🛡️ SUPER ADMIN MODULE — Strictly restricted to Super Admin leads
+# Nobody can merge changes to Super Admin without approval from either lead
+src/app/super-admin/            @techno-byte100 @Sakthi-m35
+src/components/super-admin/     @techno-byte100 @Sakthi-m35
+
+# 🏫 SCHOOL ADMIN MODULE (Transport Lead) - placeholder for teammate IDs
+src/app/school-admin/           @techno-byte100
+src/components/school-admin/    @techno-byte100
+
+# 📋 ADMIN MODULE (Profiles & Records) - placeholder for teammate IDs
+src/app/admin/                  @techno-byte100
+src/components/admin/           @techno-byte100
+
+# 👨‍👩‍👧 PARENT MODULE - placeholder for teammate IDs
+src/app/parent/                 @techno-byte100
+src/components/parent/          @techno-byte100
+
+# 🚌 DRIVER MODULE - placeholder for teammate IDs
+src/app/driver/                 @techno-byte100
+src/components/driver/          @techno-byte100
