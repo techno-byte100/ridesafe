@@ -142,7 +142,6 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
       let res: Response
       if (editingUser) {
         const body: Record<string, string | null> = {
-          id: editingUser.id,
           name: form.name,
           email: form.email,
           phone: form.phone || null,
@@ -150,7 +149,7 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
           organizationId: form.organizationId || null
         }
         if (form.password) body.password = form.password
-        res = await fetch('/api/admin/users', {
+        res = await fetch(`/api/admin/users/${editingUser.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -190,10 +189,8 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
     if (!confirm(t('superAdmin.usersPage.confirmDeleteUser', { name: u.name }))) return
     setDeletingId(u.id)
     try {
-      const res = await fetch('/api/admin/users', {
+      const res = await fetch(`/api/admin/users/${u.id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: u.id })
       })
       if (res.ok) {
         showToast(t('superAdmin.usersPage.toastUserDeleted'))
@@ -225,7 +222,7 @@ export default function SuperUsersTab({ searchQuery = '', currentUserRole = 'SUP
     }
     setInvoicingId(invoiceUser.id)
     try {
-      const res = await fetch('/api/invoices', {
+      const res = await fetch('/api/billing/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ parentId: invoiceUser.id, amount: amt })

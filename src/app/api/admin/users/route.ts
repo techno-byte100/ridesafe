@@ -6,7 +6,7 @@ import { logAudit } from '@/lib/services/auditService'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
     try {
         const auth = await getUserFromSession()
         if (!auth || (auth.role !== 'ADMIN' && auth.role !== 'SUPER_ADMIN')) {
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
     }
 }
 
-// Bulk update users (role, organizationId)
+// Bulk or single update users
 export async function PATCH(request: Request) {
     try {
         const auth = await getUserFromSession()
@@ -138,7 +138,73 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { userIds, role, organizationId } = await request.json()
+        const body = await request.json()
+        const { userIds, id, role, organizationId, name, email, phone, password } = body
+
+        // Fallback for single user update if 'id' is supplied instead of 'userIds'
+        if (id && (!userIds || !Array.isArray(userIds))) {
+            const existing = await prisma.user.findUnique({ where: { id } })
+            if (!existing) {
+                return NextResponse.json({ error: 'User not found' }, { status: 404 })
+            }
+
+            const updates: Record<string, unknown> = {}
+            if (name !== undefined) {
+                if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
+                    return NextResponse.json({ error: 'Name must be between 2 and 100 characters' }, { status: 400 })
+                }
+                updates.name = name.trim()
+            }
+            if (email !== undefined) {
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
+                }
+                const normalized = email.toLowerCase().trim()
+                if (normalized !== existing.email) {
+                    const dupe = await prisma.user.findUnique({ where: { email: normalized } })
+                    if (dupe) {
+                        return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
+                    }
+                }
+                updates.email = normalized
+            }
+            if (phone !== undefined) {
+                if (phone && !/^[+0-9\s()\-]{7,20}$/.test(phone)) {
+                    return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
+                }
+                updates.phone = phone?.trim() || null
+            }
+            if (role !== undefined) {
+                const VALID_ROLES = ['ADMIN', 'DRIVER', 'PARENT', 'SCHOOL_ADMIN', 'SUPER_ADMIN']
+                if (!VALID_ROLES.includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+                if ((role === 'SUPER_ADMIN' || existing.role === 'SUPER_ADMIN') && auth.role !== 'SUPER_ADMIN') {
+                    return NextResponse.json({ error: 'Only a Super Admin can assign or change this role' }, { status: 403 })
+                }
+                updates.role = role
+            }
+            if (organizationId !== undefined) {
+                if (organizationId) {
+                    const org = await prisma.organization.findUnique({ where: { id: organizationId } })
+                    if (!org) return NextResponse.json({ error: 'Organisation not found' }, { status: 400 })
+                    updates.organizationId = organizationId
+                } else {
+                    updates.organizationId = null
+                }
+            }
+            if (password) {
+                if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+                updates.password = await bcrypt.hash(password, 12)
+            }
+
+            const updated = await prisma.user.update({
+                where: { id },
+                data: updates,
+                select: { id: true, name: true, email: true, role: true, phone: true, organizationId: true }
+            })
+            logAudit({ userId: auth.id, action: 'UPDATE_USER', target: 'User', targetId: id, details: updates })
+            return NextResponse.json({ user: updated })
+        }
+
         if (!Array.isArray(userIds) || userIds.length === 0) {
             return NextResponse.json({ error: 'userIds array is required' }, { status: 400 })
         }
@@ -167,12 +233,12 @@ export async function PATCH(request: Request) {
 
         return NextResponse.json({ success: true, count: result.count })
     } catch (error) {
-        console.error('Bulk user update error:', error)
+        console.error('User update error:', error)
         return NextResponse.json({ error: 'Failed to update users' }, { status: 500 })
     }
 }
 
-// Bulk delete users
+// Bulk or single delete users
 export async function DELETE(request: Request) {
     try {
         const auth = await getUserFromSession()
@@ -180,13 +246,20 @@ export async function DELETE(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { userIds } = await request.json()
-        if (!Array.isArray(userIds) || userIds.length === 0) {
+        const body = await request.json()
+        let targetIds: string[] = []
+        if (Array.isArray(body.userIds)) {
+            targetIds = body.userIds
+        } else if (body.id && typeof body.id === 'string') {
+            targetIds = [body.id]
+        }
+
+        if (targetIds.length === 0) {
             return NextResponse.json({ error: 'userIds array is required' }, { status: 400 })
         }
 
         // Prevent deleting oneself
-        const filteredIds = userIds.filter(id => id !== auth.id)
+        const filteredIds = targetIds.filter(id => id !== auth.id)
         if (filteredIds.length === 0) {
             return NextResponse.json({ error: 'Cannot delete current user session account' }, { status: 400 })
         }
@@ -204,7 +277,7 @@ export async function DELETE(request: Request) {
 
         return NextResponse.json({ success: true, count: result.count })
     } catch (error) {
-        console.error('Bulk user delete error:', error)
+        console.error('User delete error:', error)
         return NextResponse.json({ error: 'Failed to delete users' }, { status: 500 })
     }
 }
