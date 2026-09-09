@@ -1058,5 +1058,20 @@
       "exportTenantsBtn": "Export Tenants",
       "exportAuditSub": "Export Audit"
     }
+  },
+  "schoolAdmin": {
+    "students": "Pelajar",
+    "parents": "Ibu Bapa",
+    "drivers": "Pemandu",
+    "navGroupEnrollment": "Pendaftaran & Direktori",
+    "navGroupOperations": "Operasi Pengangkutan",
+    "navGroupIntelligence": "Perisikan & Perancangan",
+    "loadingConsole": "Memuatkan Konsol Pengangkutan Sekolah...",
+    "signOutTitle": "Log keluar dari Konsol Pentadbir Sekolah?",
+    "signOutMessage": "Adakah anda pasti mahu log keluar?",
+    "signOut": "Log Keluar",
+    "signingOut": "Sedang log keluar...",
+    "language": "Bahasa",
+    "transportOpsRole": "Pengurusan Pengangkutan & Operasi"
   }
 }

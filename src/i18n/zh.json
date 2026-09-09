@@ -1058,5 +1058,20 @@
       "exportTenantsBtn": "Export Tenants",
       "exportAuditSub": "Export Audit"
     }
+  },
+  "schoolAdmin": {
+    "students": "学生",
+    "parents": "家长",
+    "drivers": "司机",
+    "navGroupEnrollment": "报名与目录",
+    "navGroupOperations": "运输运营",
+    "navGroupIntelligence": "智能与规划",
+    "loadingConsole": "正在加载学校交通控制台...",
+    "signOutTitle": "退出学校管理员控制台？",
+    "signOutMessage": "您确定要退出吗？",
+    "signOut": "退出",
+    "signingOut": "正在退出...",
+    "language": "语言",
+    "transportOpsRole": "交通与运营管理"
   }
 }

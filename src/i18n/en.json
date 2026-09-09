@@ -1058,5 +1058,20 @@
       "exportTenantsBtn": "Export Tenants",
       "exportAuditSub": "Export Audit"
     }
+  },
+  "schoolAdmin": {
+    "students": "Students",
+    "parents": "Parents",
+    "drivers": "Drivers",
+    "navGroupEnrollment": "Enrollment & Directory",
+    "navGroupOperations": "Transport Operations",
+    "navGroupIntelligence": "Intelligence & Planning",
+    "loadingConsole": "Loading School Transport Console...",
+    "signOutTitle": "Sign out of School Admin Console?",
+    "signOutMessage": "Are you sure you want to log out?",
+    "signOut": "Sign Out",
+    "signingOut": "Signing out...",
+    "language": "Language",
+    "transportOpsRole": "Transport & Operations Management"
   }
 }
