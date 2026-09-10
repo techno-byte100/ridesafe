@@ -16,12 +16,13 @@ import LostFoundTab from '@/components/admin/LostFoundTab'
 import AnnouncementsTab from '@/components/admin/AnnouncementsTab'
 import TripHistoryTab from '@/components/admin/TripHistoryTab'
 import RouteOptimizationTab from '@/components/admin/RouteOptimizationTab'
+import RouteStopsTab from '@/components/admin/RouteStopsTab'
 import AcademicCalendarTab from '@/components/admin/AcademicCalendarTab'
 import OrganizationsTab from '@/components/admin/OrganizationsTab'
 import { LanguageSwitcher, useTranslation } from '@/i18n/provider'
 import {
   LogOut, Menu, X,
-  LayoutDashboard, Bus, MapPin, CalendarDays, History,
+  LayoutDashboard, Bus, MapPin, MapPinned, CalendarDays, History,
   Users2, Wrench, Package, Megaphone, Sparkles, MessageSquare, Bell,
   Building2, ShieldCheck, ClipboardCheck,
 } from 'lucide-react'
@@ -54,6 +55,7 @@ function buildSidebarGroups(t: (k: string) => string): SidebarGroup[] {
       items: [
         { id: 'OVERVIEW',    icon: LayoutDashboard, label: t('nav.overview') },
         { id: 'FLEET',       icon: Bus,             label: t('nav.fleet') },
+        { id: 'ROUTESTOPS',  icon: MapPinned,       label: 'Route Stops' },
         { id: 'ATTENDANCE',  icon: ClipboardCheck,  label: t('nav.attendance') },
         { id: 'LIVETRIPS',   icon: MapPin,          label: t('nav.liveTrips') },
         { id: 'SCHEDULE',    icon: CalendarDays,    label: t('nav.schedule') },
@@ -119,7 +121,7 @@ export default function AdminDashboard() {
 
   const SIDEBAR_GROUPS = buildSidebarGroups(t)
   const TAB_LABELS: Record<string, string> = {
-    OVERVIEW: t('nav.overview'), FLEET: t('nav.fleet'),
+    OVERVIEW: t('nav.overview'), FLEET: t('nav.fleet'), ROUTESTOPS: 'Route Stops',
     ATTENDANCE: t('nav.attendance'),
     LIVETRIPS: t('nav.liveTrips'), SCHEDULE: t('nav.schedule'), HISTORY: t('nav.history'),
     USERS: t('nav.users'), MAINTENANCE: t('nav.maintenance'), LOSTFOUND: t('nav.lostFound'),
@@ -439,6 +441,7 @@ export default function AdminDashboard() {
               transition={{ duration: 0.18 }}
             >
               {activeTab === 'OVERVIEW'      && <OverviewTab currentUserRole={currentUserRole} />}
+              {activeTab === 'ROUTESTOPS'    && <RouteStopsTab />}
               {activeTab === 'USERS'         && <UsersTab searchQuery={searchQuery} />}
               {activeTab === 'ATTENDANCE'    && <AttendanceTab />}
               {activeTab === 'FLEET'         && <FleetTab searchQuery={searchQuery} />}
