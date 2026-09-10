@@ -11,11 +11,12 @@ import StudentsTab from '@/components/super-admin/StudentsTab'
 import SuperAdminSystemSettingsTab from '@/components/super-admin/SystemSettingsTab'
 import AuditLogTab from '@/components/super-admin/AuditLogTab'
 import GlobalAnalyticsTab from '@/components/super-admin/GlobalAnalyticsTab'
+import SuperAdminAnnouncementsTab from '@/components/super-admin/AnnouncementsTab'
 import { LanguageSwitcher, useTranslation } from '@/i18n/provider'
 import {
   LogOut, Menu, X, ShieldAlert,
   LayoutDashboard, Users2, Building2, ShieldCheck, Settings,
-  ArrowRight, Sparkles, Terminal, FileText, BarChart3, GraduationCap
+  ArrowRight, Sparkles, Terminal, FileText, BarChart3, GraduationCap, Megaphone
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -58,11 +59,12 @@ export default function SuperAdminDashboard() {
 
   const NAV_ITEMS: NavItem[] = [
     { id: 'OVERVIEW',      icon: LayoutDashboard, label: t('superAdmin.overview') || 'Platform Overview' },
-    { id: 'ORGANIZATIONS', icon: Building2,       label: t('superAdmin.schools') || 'Schools & Tenants', badge: 'Tenants' },
-    { id: 'USERS',         icon: ShieldCheck,     label: t('superAdmin.users') || 'Global User Directory', badge: 'RBAC' },
-    { id: 'STUDENTS',      icon: GraduationCap,   label: t('superAdmin.students') || 'Students & Enrolment', badge: 'Roster' },
-    { id: 'ANALYTICS',     icon: BarChart3,       label: t('superAdmin.analytics') || 'Global Analytics', badge: 'KPIs' },
-    { id: 'AUDIT_LOG',     icon: FileText,        label: t('superAdmin.auditLog') || 'Security Audit Trail', badge: 'Trail' },
+    { id: 'ORGANIZATIONS', icon: Building2,       label: t('superAdmin.schools') || 'Schools & Tenants' },
+    { id: 'USERS',         icon: ShieldCheck,     label: t('superAdmin.users') || 'Global User Directory' },
+    { id: 'STUDENTS',      icon: GraduationCap,   label: t('superAdmin.students') || 'Students & Enrolment' },
+    { id: 'ANNOUNCEMENTS', icon: Megaphone,       label: t('nav.announcements') || 'Announcements' },
+    { id: 'ANALYTICS',     icon: BarChart3,       label: t('superAdmin.analytics') || 'Global Analytics' },
+    { id: 'AUDIT_LOG',     icon: FileText,        label: t('superAdmin.auditLog') || 'Security Audit Trail' },
     { id: 'SETTINGS',      icon: Settings,        label: t('superAdmin.settings') || 'Developer & System Settings' },
   ]
 
@@ -181,7 +183,7 @@ export default function SuperAdminDashboard() {
         <div style={{ margin: '14px 16px 6px', padding: '10px 14px', background: HC.surface, borderRadius: 10, border: `1px solid ${HC.line}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#30D158' }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#FFF' }}>{userName}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#FFF' }}>Super Admin</span>
           </div>
           <div style={{ fontSize: 11, color: HC.text3, marginTop: 3 }}>
             Full Developer & Tenant Privilege
@@ -300,6 +302,9 @@ export default function SuperAdminDashboard() {
           )}
           {activeTab === 'STUDENTS' && (
             <StudentsTab />
+          )}
+          {activeTab === 'ANNOUNCEMENTS' && (
+            <SuperAdminAnnouncementsTab />
           )}
           {activeTab === 'ANALYTICS' && (
             <GlobalAnalyticsTab />

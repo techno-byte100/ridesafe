@@ -4,19 +4,19 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import OverviewTab from '@/components/school-admin/OverviewTab'
-import FleetTab from '@/components/school-admin/FleetTab'
-import LiveTripsTab from '@/components/school-admin/LiveTripsTab'
 import ScheduleTab from '@/components/school-admin/ScheduleTab'
 import TripHistoryTab from '@/components/school-admin/TripHistoryTab'
-import RouteOptimizationTab from '@/components/school-admin/RouteOptimizationTab'
+import StudentsTab from '@/components/admin/StudentsTab'
+import UsersTab from '@/components/admin/UsersTab'
 import AcademicCalendarTab from '@/components/school-admin/AcademicCalendarTab'
 import AnnouncementsTab from '@/components/school-admin/AnnouncementsTab'
 import AnalyticsTab from '@/components/school-admin/AnalyticsTab'
 import { LanguageSwitcher, useTranslation } from '@/i18n/provider'
 import {
   LogOut, Menu, X,
-  LayoutDashboard, Bus, MapPin, CalendarDays, History,
-  Megaphone, TrendingUp, Sparkles, Bell, Building
+  LayoutDashboard, CalendarDays, History,
+  Megaphone, TrendingUp, Bell, Building,
+  GraduationCap, Users, Car
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -58,22 +58,27 @@ export default function SchoolAdminDashboard() {
 
   const NAV_ITEMS: { category: string; items: NavItem[] }[] = [
     {
-      category: 'Transport Operations',
+      category: t('schoolAdmin.navGroupEnrollment'),
       items: [
-        { id: 'OVERVIEW',  icon: LayoutDashboard, label: t('nav.overview') || 'Overview' },
-        { id: 'FLEET',     icon: Bus,             label: t('nav.fleet') || 'Fleet & Buses' },
-        { id: 'LIVETRIPS', icon: MapPin,          label: t('nav.liveTrips') || 'Live Tracking' },
-        { id: 'SCHEDULE',  icon: CalendarDays,    label: t('nav.schedule') || 'Schedules' },
-        { id: 'HISTORY',   icon: History,         label: t('nav.history') || 'Trip History' },
+        { id: 'STUDENTS', icon: GraduationCap, label: t('schoolAdmin.students') },
+        { id: 'PARENTS',  icon: Users,         label: t('schoolAdmin.parents') },
+        { id: 'DRIVERS',  icon: Car,           label: t('schoolAdmin.drivers') },
       ]
     },
     {
-      category: 'Intelligence & Planning',
+      category: t('schoolAdmin.navGroupOperations'),
       items: [
-        { id: 'OPTIMIZE',      icon: Sparkles,   label: t('nav.aiOptimize') || 'Route Optimization' },
-        { id: 'CALENDAR',      icon: Bell,       label: t('nav.academicCalendar') || 'Academic Calendar' },
-        { id: 'ANNOUNCEMENTS', icon: Megaphone,  label: t('nav.announcements') || 'Announcements' },
-        { id: 'ANALYTICS',     icon: TrendingUp, label: t('nav.analytics') || 'Analytics' },
+        { id: 'OVERVIEW',  icon: LayoutDashboard, label: t('nav.overview') },
+        { id: 'SCHEDULE',  icon: CalendarDays,    label: t('nav.schedule') },
+        { id: 'HISTORY',   icon: History,         label: t('nav.history') },
+      ]
+    },
+    {
+      category: t('schoolAdmin.navGroupIntelligence'),
+      items: [
+        { id: 'CALENDAR',      icon: Bell,       label: t('nav.academicCalendar') },
+        { id: 'ANNOUNCEMENTS', icon: Megaphone,  label: t('nav.announcements') },
+        { id: 'ANALYTICS',     icon: TrendingUp, label: t('nav.analytics') },
       ]
     }
   ]
@@ -125,7 +130,7 @@ export default function SchoolAdminDashboard() {
           border: '3px solid #26262C', borderTopColor: HC.yellow,
           animation: 'spin 0.8s linear infinite'
         }} />
-        <span style={{ color: HC.text2, fontSize: 14 }}>Loading School Transport Console...</span>
+        <span style={{ color: HC.text2, fontSize: 14 }}>{t('schoolAdmin.loadingConsole')}</span>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
@@ -195,7 +200,7 @@ export default function SchoolAdminDashboard() {
             <span style={{ fontSize: 12, fontWeight: 600, color: '#FFF' }}>{userName}</span>
           </div>
           <div style={{ fontSize: 11, color: HC.text3, marginTop: 3 }}>
-            Transport & Operations Management
+            {t('schoolAdmin.transportOpsRole')}
           </div>
         </div>
 
@@ -236,7 +241,7 @@ export default function SchoolAdminDashboard() {
 
         <div style={{ padding: 16, borderTop: `1px solid ${HC.line}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12, color: HC.text3 }}>Language</span>
+            <span style={{ fontSize: 12, color: HC.text3 }}>{t('schoolAdmin.language')}</span>
             <LanguageSwitcher />
           </div>
           <button
@@ -249,7 +254,7 @@ export default function SchoolAdminDashboard() {
               cursor: 'pointer', width: '100%', justifyContent: 'center'
             }}
           >
-            <LogOut size={15} /> Sign Out
+            <LogOut size={15} /> {t('schoolAdmin.signOut')}
           </button>
         </div>
       </aside>
@@ -272,18 +277,18 @@ export default function SchoolAdminDashboard() {
               </button>
             )}
             <h1 style={{ fontSize: 18, fontWeight: 700, color: '#FFF', margin: 0 }}>
-              {activeTab}
+              {NAV_ITEMS.flatMap(g => g.items).find(i => i.id === activeTab)?.label || activeTab}
             </h1>
           </div>
         </header>
 
         <div style={{ flex: 1, padding: 24, maxWidth: 1400, width: '100%', margin: '0 auto' }}>
           {activeTab === 'OVERVIEW' && <OverviewTab currentUserRole={currentUserRole} />}
-          {activeTab === 'FLEET' && <FleetTab />}
-          {activeTab === 'LIVETRIPS' && <LiveTripsTab />}
+          {activeTab === 'STUDENTS' && <StudentsTab />}
+          {activeTab === 'PARENTS' && <UsersTab currentUserRole={currentUserRole} defaultRoleFilter="PARENT" lockRoleFilter={true} />}
+          {activeTab === 'DRIVERS' && <UsersTab currentUserRole={currentUserRole} defaultRoleFilter="DRIVER" lockRoleFilter={true} />}
           {activeTab === 'SCHEDULE' && <ScheduleTab />}
           {activeTab === 'HISTORY' && <TripHistoryTab />}
-          {activeTab === 'OPTIMIZE' && <RouteOptimizationTab />}
           {activeTab === 'CALENDAR' && <AcademicCalendarTab />}
           {activeTab === 'ANNOUNCEMENTS' && <AnnouncementsTab />}
           {activeTab === 'ANALYTICS' && <AnalyticsTab />}
@@ -308,10 +313,10 @@ export default function SchoolAdminDashboard() {
               }}
             >
               <h3 style={{ fontSize: 17, fontWeight: 700, color: '#FFF', margin: '0 0 8px' }}>
-                Sign out of School Admin Console?
+                {t('schoolAdmin.signOutTitle')}
               </h3>
               <p style={{ color: HC.text2, fontSize: 13, margin: '0 0 20px' }}>
-                Are you sure you want to log out?
+                {t('schoolAdmin.signOutMessage')}
               </p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <button
@@ -322,7 +327,7 @@ export default function SchoolAdminDashboard() {
                     cursor: 'pointer', fontSize: 13, fontWeight: 600
                   }}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleLogout}
@@ -333,7 +338,7 @@ export default function SchoolAdminDashboard() {
                     cursor: 'pointer', fontSize: 13, fontWeight: 600
                   }}
                 >
-                  {loggingOut ? 'Signing out...' : 'Sign Out'}
+                  {loggingOut ? t('schoolAdmin.signingOut') : t('schoolAdmin.signOut')}
                 </button>
               </div>
             </motion.div>

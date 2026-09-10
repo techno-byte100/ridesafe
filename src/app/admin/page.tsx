@@ -7,24 +7,23 @@ import Image from 'next/image'
 import OverviewTab from '@/components/admin/OverviewTab'
 import AttendanceTab from '@/components/admin/AttendanceTab'
 import UsersTab from '@/components/admin/UsersTab'
-import StudentsTab from '@/components/admin/StudentsTab'
 import FleetTab from '@/components/admin/FleetTab'
 import LiveTripsTab from '@/components/admin/LiveTripsTab'
 import MessagesTab from '@/components/admin/MessagesTab'
-import AnalyticsTab from '@/components/admin/AnalyticsTab'
 import ScheduleTab from '@/components/admin/ScheduleTab'
 import MaintenanceTab from '@/components/admin/MaintenanceTab'
 import LostFoundTab from '@/components/admin/LostFoundTab'
 import AnnouncementsTab from '@/components/admin/AnnouncementsTab'
 import TripHistoryTab from '@/components/admin/TripHistoryTab'
 import RouteOptimizationTab from '@/components/admin/RouteOptimizationTab'
+import RouteStopsTab from '@/components/admin/RouteStopsTab'
 import AcademicCalendarTab from '@/components/admin/AcademicCalendarTab'
 import OrganizationsTab from '@/components/admin/OrganizationsTab'
 import { LanguageSwitcher, useTranslation } from '@/i18n/provider'
 import {
   LogOut, Menu, X,
-  LayoutDashboard, Bus, GraduationCap, MapPin, CalendarDays, History,
-  Users2, Wrench, Package, Megaphone, TrendingUp, Sparkles, MessageSquare, Bell,
+  LayoutDashboard, Bus, MapPin, MapPinned, CalendarDays, History,
+  Users2, Wrench, Package, Megaphone, Sparkles, MessageSquare, Bell,
   Building2, ShieldCheck, ClipboardCheck,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -56,7 +55,7 @@ function buildSidebarGroups(t: (k: string) => string): SidebarGroup[] {
       items: [
         { id: 'OVERVIEW',    icon: LayoutDashboard, label: t('nav.overview') },
         { id: 'FLEET',       icon: Bus,             label: t('nav.fleet') },
-        { id: 'STUDENTS',    icon: GraduationCap,   label: t('nav.students') },
+        { id: 'ROUTESTOPS',  icon: MapPinned,       label: 'Route Stops' },
         { id: 'ATTENDANCE',  icon: ClipboardCheck,  label: t('nav.attendance') },
         { id: 'LIVETRIPS',   icon: MapPin,          label: t('nav.liveTrips') },
         { id: 'SCHEDULE',    icon: CalendarDays,    label: t('nav.schedule') },
@@ -75,7 +74,6 @@ function buildSidebarGroups(t: (k: string) => string): SidebarGroup[] {
     {
       label: t('nav.groupIntelligence'),
       items: [
-        { id: 'ANALYTICS', icon: TrendingUp,    label: t('nav.analytics') },
         { id: 'OPTIMIZE',  icon: Sparkles,      label: t('nav.aiOptimize') },
         { id: 'MESSAGES',  icon: MessageSquare, label: t('nav.messages') },
         { id: 'CALENDAR',  icon: Bell,          label: t('nav.academicCalendar') },
@@ -123,11 +121,11 @@ export default function AdminDashboard() {
 
   const SIDEBAR_GROUPS = buildSidebarGroups(t)
   const TAB_LABELS: Record<string, string> = {
-    OVERVIEW: t('nav.overview'), FLEET: t('nav.fleet'), STUDENTS: t('nav.students'),
+    OVERVIEW: t('nav.overview'), FLEET: t('nav.fleet'), ROUTESTOPS: 'Route Stops',
     ATTENDANCE: t('nav.attendance'),
     LIVETRIPS: t('nav.liveTrips'), SCHEDULE: t('nav.schedule'), HISTORY: t('nav.history'),
     USERS: t('nav.users'), MAINTENANCE: t('nav.maintenance'), LOSTFOUND: t('nav.lostFound'),
-    ANNOUNCEMENTS: t('nav.announcements'), ANALYTICS: t('nav.analytics'),
+    ANNOUNCEMENTS: t('nav.announcements'),
     OPTIMIZE: t('nav.aiOptimize'), MESSAGES: t('nav.messages'), CALENDAR: t('nav.academicCalendar'),
     ORGANIZATIONS: t('nav.organisations'),
   }
@@ -326,7 +324,7 @@ export default function AdminDashboard() {
 
           {/* Global Search Bar */}
           {!isMobile && (() => {
-            const searchable = ['STUDENTS', 'USERS', 'SUPERUSERS', 'FLEET'].includes(activeTab)
+            const searchable = ['USERS', 'SUPERUSERS', 'FLEET'].includes(activeTab)
             
             // Generate quick jump suggestions if query matches any tab label
             const jumpSuggestions = searchQuery 
@@ -372,14 +370,6 @@ export default function AdminDashboard() {
                         Global Search Options
                       </div>
                       <div style={{ padding: '4px' }}>
-                        <button
-                          onClick={() => { setActiveTab('STUDENTS'); setSearchQuery(searchQuery); }}
-                          style={{ width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', color: HC.text, fontSize: 13, cursor: 'pointer', borderRadius: 8 }}
-                          onMouseOver={e => e.currentTarget.style.background = HC.lineStrong}
-                          onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-                        >
-                          Search <span style={{ color: HC.yellow }}>&quot;{searchQuery}&quot;</span> in <strong>Students</strong>
-                        </button>
                         <button
                           onClick={() => { setActiveTab('USERS'); setSearchQuery(searchQuery); }}
                           style={{ width: '100%', textAlign: 'left', padding: '10px 12px', background: 'transparent', border: 'none', color: HC.text, fontSize: 13, cursor: 'pointer', borderRadius: 8 }}
@@ -451,9 +441,8 @@ export default function AdminDashboard() {
               transition={{ duration: 0.18 }}
             >
               {activeTab === 'OVERVIEW'      && <OverviewTab currentUserRole={currentUserRole} />}
-              {activeTab === 'ANALYTICS'     && <AnalyticsTab />}
+              {activeTab === 'ROUTESTOPS'    && <RouteStopsTab />}
               {activeTab === 'USERS'         && <UsersTab searchQuery={searchQuery} />}
-              {activeTab === 'STUDENTS'      && <StudentsTab searchQuery={searchQuery} />}
               {activeTab === 'ATTENDANCE'    && <AttendanceTab />}
               {activeTab === 'FLEET'         && <FleetTab searchQuery={searchQuery} />}
               {activeTab === 'LIVETRIPS'     && <LiveTripsTab />}

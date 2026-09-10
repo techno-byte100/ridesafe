@@ -27,14 +27,13 @@ export async function GET(req: NextRequest) {
           phone: true,
           role: true,
           organizationId: true,
-          isActive: true,
           lastLoginAt: true,
           createdAt: true,
         },
         orderBy: { createdAt: 'desc' },
       })
 
-      const headers = ['ID', 'Name', 'Email', 'Phone', 'Role', 'OrganizationId', 'IsActive', 'LastLoginAt', 'CreatedAt']
+      const headers = ['ID', 'Name', 'Email', 'Phone', 'Role', 'OrganizationId', 'LastLoginAt', 'CreatedAt']
       const rows = users.map(u => [
         u.id,
         `"${(u.name || '').replace(/"/g, '""')}"`,
@@ -42,7 +41,6 @@ export async function GET(req: NextRequest) {
         `"${(u.phone || '').replace(/"/g, '""')}"`,
         u.role,
         u.organizationId || '',
-        u.isActive ? 'true' : 'false',
         u.lastLoginAt ? u.lastLoginAt.toISOString() : '',
         u.createdAt.toISOString(),
       ].join(','))
@@ -52,7 +50,6 @@ export async function GET(req: NextRequest) {
         select: {
           id: true,
           name: true,
-          slug: true,
           address: true,
           phone: true,
           subscriptionTier: true,
@@ -65,11 +62,10 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
       })
 
-      const headers = ['ID', 'Name', 'Slug', 'Address', 'Phone', 'SubscriptionTier', 'MaxBuses', 'MaxStudents', 'MaxUsers', 'IsActive', 'CreatedAt']
+      const headers = ['ID', 'Name', 'Address', 'Phone', 'SubscriptionTier', 'MaxBuses', 'MaxStudents', 'MaxUsers', 'IsActive', 'CreatedAt']
       const rows = orgs.map(o => [
         o.id,
         `"${(o.name || '').replace(/"/g, '""')}"`,
-        `"${(o.slug || '').replace(/"/g, '""')}"`,
         `"${(o.address || '').replace(/"/g, '""')}"`,
         `"${(o.phone || '').replace(/"/g, '""')}"`,
         o.subscriptionTier,

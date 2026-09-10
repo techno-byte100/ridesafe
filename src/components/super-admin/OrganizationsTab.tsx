@@ -92,16 +92,16 @@ export default function OrganizationsTab() {
 
   const handleSave = async () => {
     if (!form.name.trim() || form.name.trim().length < 2) {
-      showToast('Organisation name must be at least 2 characters', 'error')
+      showToast(t('superAdmin.orgsPage.validationName'), 'error')
       return
     }
     if (form.address && !form.address.trim()) {
-      showToast('Address cannot be only spaces', 'error')
+      showToast(t('superAdmin.orgsPage.validationAddress'), 'error')
       return
     }
     if (form.phone) {
-      if (!form.phone.trim()) { showToast('Phone number cannot be only spaces', 'error'); return }
-      if (!/^[+0-9\s()-]{7,20}$/.test(form.phone.trim())) { showToast('Enter a valid phone number', 'error'); return }
+      if (!form.phone.trim()) { showToast(t('superAdmin.orgsPage.validationPhoneSpaces'), 'error'); return }
+      if (!/^[+0-9\s()-]{7,20}$/.test(form.phone.trim())) { showToast(t('superAdmin.orgsPage.validationPhoneInvalid'), 'error'); return }
     }
     setSaving(true)
     try {
@@ -120,17 +120,17 @@ export default function OrganizationsTab() {
         })
       }
       if (res.ok) {
-        showToast(editingOrg ? 'Organisation updated!' : 'Organisation created!')
+        showToast(editingOrg ? t('superAdmin.orgsPage.toastUpdated') : t('superAdmin.orgsPage.toastCreated'))
         setShowModal(false)
         setForm(defaultForm)
         setEditingOrg(null)
         load()
       } else {
         const e = await res.json()
-        showToast(e.error || (editingOrg ? 'Failed to update' : 'Failed to create'), 'error')
+        showToast(e.error || (editingOrg ? t('superAdmin.orgsPage.toastFailedUpdate') : t('superAdmin.orgsPage.toastFailedCreate')), 'error')
       }
     } catch {
-      showToast('Network error', 'error')
+      showToast(t('superAdmin.orgsPage.toastNetworkError'), 'error')
     } finally {
       setSaving(false)
     }
@@ -144,18 +144,18 @@ export default function OrganizationsTab() {
         body: JSON.stringify({ id: org.id, isActive: !org.isActive })
       })
       if (res.ok) {
-        showToast(`Organisation ${!org.isActive ? 'activated' : 'deactivated'}`)
+        showToast(!org.isActive ? t('superAdmin.orgsPage.toastActivated') : t('superAdmin.orgsPage.toastDeactivated'))
         load()
       } else {
-        showToast('Failed to update status', 'error')
+        showToast(t('superAdmin.orgsPage.toastStatusFailed'), 'error')
       }
     } catch {
-      showToast('Network error', 'error')
+      showToast(t('superAdmin.orgsPage.toastNetworkError'), 'error')
     }
   }
 
   const handleDelete = async (org: Org) => {
-    if (!confirm(`Delete "${org.name}"? This cannot be undone.`)) return
+    if (!confirm(t('superAdmin.orgsPage.confirmDelete', { name: org.name }))) return
     setDeleting(org.id)
     try {
       const res = await fetch('/api/admin/organizations', {
@@ -164,14 +164,14 @@ export default function OrganizationsTab() {
         body: JSON.stringify({ id: org.id })
       })
       if (res.ok) {
-        showToast('Organisation deleted')
+        showToast(t('superAdmin.orgsPage.toastDeleted'))
         load()
       } else {
         const e = await res.json()
-        showToast(e.error || 'Failed to delete', 'error')
+        showToast(e.error || t('superAdmin.orgsPage.toastDeleteFailed'), 'error')
       }
     } catch {
-      showToast('Network error', 'error')
+      showToast(t('superAdmin.orgsPage.toastNetworkError'), 'error')
     } finally {
       setDeleting(null)
     }
@@ -180,11 +180,11 @@ export default function OrganizationsTab() {
   const getTierBadge = (tier: string) => {
     switch (tier?.toUpperCase()) {
       case 'PREMIUM':
-        return { label: 'PREMIUM', bg: 'rgba(255,214,10,0.15)', text: '#FFD60A', border: 'rgba(255,214,10,0.3)' }
+        return { label: t('superAdmin.tiers.PREMIUM'), bg: 'rgba(255,214,10,0.15)', text: '#FFD60A', border: 'rgba(255,214,10,0.3)' }
       case 'BASIC':
-        return { label: 'BASIC', bg: 'rgba(10,132,255,0.15)', text: '#0A84FF', border: 'rgba(10,132,255,0.3)' }
+        return { label: t('superAdmin.tiers.BASIC'), bg: 'rgba(10,132,255,0.15)', text: '#0A84FF', border: 'rgba(10,132,255,0.3)' }
       default:
-        return { label: 'FREE', bg: 'rgba(255,255,255,0.08)', text: '#A6A6B2', border: 'rgba(255,255,255,0.15)' }
+        return { label: t('superAdmin.tiers.FREE'), bg: 'rgba(255,255,255,0.08)', text: '#A6A6B2', border: 'rgba(255,255,255,0.15)' }
     }
   }
 
@@ -218,16 +218,16 @@ export default function OrganizationsTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Building2 size={20} color="var(--primary)" /> Manage Organisations & School Tenants
+              <Building2 size={20} color="var(--primary)" /> {t('superAdmin.orgsPage.title')}
             </h3>
             <div style={{ fontSize: '0.83rem', color: 'var(--text-muted)', marginTop: 4 }}>
-              {orgs.length} organisation{orgs.length !== 1 ? 's' : ''} registered · Quota management & Subscription tiers
+              {t('superAdmin.orgsPage.countSubtitle', { count: orgs.length })}
             </div>
           </div>
           <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
             className="btn btn-primary" onClick={openAddModal}
             style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Plus size={16} /> Add Organisation
+            <Plus size={16} /> {t('superAdmin.orgsPage.addBtn')}
           </motion.button>
         </div>
       </div>
@@ -236,8 +236,8 @@ export default function OrganizationsTab() {
       {orgs.length === 0 ? (
         <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           <Building2 size={40} style={{ opacity: 0.25, marginBottom: '1rem' }} />
-          <div style={{ fontWeight: 600, marginBottom: 4 }}>No organisations yet</div>
-          <div style={{ fontSize: '0.85rem' }}>Click "Add Organisation" to create the first one.</div>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{t('superAdmin.orgsPage.noOrgsTitle')}</div>
+          <div style={{ fontSize: '0.85rem' }}>{t('superAdmin.orgsPage.noOrgsSub')}</div>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px,1fr))', gap: '1.25rem' }}>
@@ -268,7 +268,7 @@ export default function OrganizationsTab() {
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, marginLeft: 8 }}>
                     <span className={`badge ${org.isActive ? 'badge-success' : 'badge-pending'}`}>
-                      {org.isActive ? 'Active' : 'Inactive'}
+                      {org.isActive ? t('superAdmin.orgsPage.statusActive') : t('superAdmin.orgsPage.statusInactive')}
                     </span>
                     <motion.button whileTap={{ scale: 0.92 }} onClick={() => openEditModal(org)}
                       title="Edit organisation"
@@ -293,7 +293,7 @@ export default function OrganizationsTab() {
                 <div style={{ background: 'var(--surface-2)', padding: '10px 12px', borderRadius: 8, marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
-                      <span>Buses Quota</span>
+                      <span>{t('superAdmin.orgsPage.busesQuotaLabel')}</span>
                       <span>{org._count?.buses || 0} / {org.maxBuses || 5} ({busQuotaPct}%)</span>
                     </div>
                     <div style={{ height: 4, width: '100%', background: '#26262C', borderRadius: 2, overflow: 'hidden' }}>
@@ -303,7 +303,7 @@ export default function OrganizationsTab() {
 
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)', marginBottom: 3 }}>
-                      <span>Students Capacity</span>
+                      <span>{t('superAdmin.orgsPage.studentsCapacityLabel')}</span>
                       <span>{org._count?.students || 0} / {org.maxStudents || 100} ({studentQuotaPct}%)</span>
                     </div>
                     <div style={{ height: 4, width: '100%', background: '#26262C', borderRadius: 2, overflow: 'hidden' }}>
@@ -315,10 +315,10 @@ export default function OrganizationsTab() {
                 {/* Stats row */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.5rem', marginTop: '0.75rem' }}>
                   {[
-                    { icon: <Users2 size={14} />, label: 'Users', val: org._count?.users || 0 },
-                    { icon: <GraduationCap size={14} />, label: 'Students', val: org._count?.students || 0 },
-                    { icon: <Bus size={14} />, label: 'Buses', val: org._count?.buses || 0 },
-                    { icon: <Route size={14} />, label: 'Routes', val: org._count?.routes || 0 },
+                    { icon: <Users2 size={14} />, label: t('superAdmin.orgsPage.statUsers'), val: org._count?.users || 0 },
+                    { icon: <GraduationCap size={14} />, label: t('superAdmin.orgsPage.statStudents'), val: org._count?.students || 0 },
+                    { icon: <Bus size={14} />, label: t('superAdmin.orgsPage.statBuses'), val: org._count?.buses || 0 },
+                    { icon: <Route size={14} />, label: t('superAdmin.orgsPage.statRoutes'), val: org._count?.routes || 0 },
                   ].map(({ icon, label, val }) => (
                     <div key={label} style={{ textAlign: 'center', padding: '0.5rem', borderRadius: 8, background: 'var(--surface-2)' }}>
                       <div style={{ color: 'var(--text-muted)', display: 'flex', justifyContent: 'center', marginBottom: 2 }}>{icon}</div>
@@ -329,7 +329,7 @@ export default function OrganizationsTab() {
                 </div>
 
                 <div style={{ marginTop: '0.75rem', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                  Created {new Date(org.createdAt).toLocaleDateString('en-MY', { dateStyle: 'medium' })}
+                  {t('superAdmin.orgsPage.createdPrefix')} {new Date(org.createdAt).toLocaleDateString('en-MY', { dateStyle: 'medium' })}
                   {' · '}ID: <span style={{ fontFamily: 'monospace', fontSize: '0.68rem' }}>{org.id.slice(0, 12)}…</span>
                 </div>
               </motion.div>
@@ -346,7 +346,7 @@ export default function OrganizationsTab() {
             <motion.div className="modal-box" initial={{ opacity: 0, scale: 0.92, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Building2 size={20} /> {editingOrg ? 'Edit Organisation & Quotas' : 'Add Organisation'}
+                  <Building2 size={20} /> {editingOrg ? t('superAdmin.orgsPage.editModalTitle') : t('superAdmin.orgsPage.addModalTitle')}
                 </h3>
                 <button onClick={() => { setShowModal(false); setEditingOrg(null) }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                   <X size={20} />
@@ -354,40 +354,40 @@ export default function OrganizationsTab() {
               </div>
 
               <div className="input-group">
-                <label className="input-label">Organisation Name *</label>
-                <input className="input-field" placeholder="e.g. SK Taman Maju" value={form.name}
+                <label className="input-label">{t('superAdmin.orgsPage.nameLabel')}</label>
+                <input className="input-field" placeholder={t('superAdmin.orgsPage.namePlaceholder')} value={form.name}
                   onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
               </div>
               <div className="input-group">
-                <label className="input-label">Address</label>
-                <input className="input-field" placeholder="Full address" value={form.address}
+                <label className="input-label">{t('superAdmin.orgsPage.addressLabel')}</label>
+                <input className="input-field" placeholder={t('superAdmin.orgsPage.addressPlaceholder')} value={form.address}
                   onChange={e => setForm(p => ({ ...p, address: e.target.value }))} />
               </div>
               <div className="input-group">
-                <label className="input-label">Phone Number</label>
-                <input type="tel" className="input-field" placeholder="+60 3-1234 5678" value={form.phone} maxLength={20}
+                <label className="input-label">{t('superAdmin.orgsPage.phoneLabel')}</label>
+                <input type="tel" className="input-field" placeholder={t('superAdmin.orgsPage.phonePlaceholder')} value={form.phone} maxLength={20}
                   onChange={e => setForm(p => ({ ...p, phone: e.target.value.replace(/[^0-9+\s()\-]/g, '') }))} />
               </div>
 
               {/* Subscription Tier Selection */}
               <div className="input-group">
-                <label className="input-label">Subscription Tier</label>
+                <label className="input-label">{t('superAdmin.orgsPage.tierLabel')}</label>
                 <select
                   className="input-field"
                   value={form.subscriptionTier}
                   onChange={e => setForm(p => ({ ...p, subscriptionTier: e.target.value }))}
                   style={{ background: 'var(--surface-2)', color: 'var(--text-main)' }}
                 >
-                  <option value="FREE">Free Tier (Standard)</option>
-                  <option value="BASIC">Basic School Tier (Enhanced)</option>
-                  <option value="PREMIUM">Premium Enterprise Tier (Unlimited / High SLA)</option>
+                  <option value="FREE">{t('superAdmin.orgsPage.tierOptions.FREE')}</option>
+                  <option value="BASIC">{t('superAdmin.orgsPage.tierOptions.BASIC')}</option>
+                  <option value="PREMIUM">{t('superAdmin.orgsPage.tierOptions.PREMIUM')}</option>
                 </select>
               </div>
 
               {/* Resource Quotas Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 12 }}>
                 <div className="input-group" style={{ marginBottom: 0 }}>
-                  <label className="input-label" style={{ fontSize: 11 }}>Max Buses</label>
+                  <label className="input-label" style={{ fontSize: 11 }}>{t('superAdmin.orgsPage.maxBusesLabel')}</label>
                   <input
                     type="number"
                     className="input-field"
@@ -396,7 +396,7 @@ export default function OrganizationsTab() {
                   />
                 </div>
                 <div className="input-group" style={{ marginBottom: 0 }}>
-                  <label className="input-label" style={{ fontSize: 11 }}>Max Students</label>
+                  <label className="input-label" style={{ fontSize: 11 }}>{t('superAdmin.orgsPage.maxStudentsLabel')}</label>
                   <input
                     type="number"
                     className="input-field"
@@ -405,7 +405,7 @@ export default function OrganizationsTab() {
                   />
                 </div>
                 <div className="input-group" style={{ marginBottom: 0 }}>
-                  <label className="input-label" style={{ fontSize: 11 }}>Max Users</label>
+                  <label className="input-label" style={{ fontSize: 11 }}>{t('superAdmin.orgsPage.maxUsersLabel')}</label>
                   <input
                     type="number"
                     className="input-field"
@@ -417,10 +417,10 @@ export default function OrganizationsTab() {
 
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button className="btn" style={{ flex: 1, background: 'var(--surface-2)', border: '1px solid var(--surface-border)', color: 'var(--text-main)' }}
-                  onClick={() => { setShowModal(false); setEditingOrg(null) }}>Cancel</button>
+                  onClick={() => { setShowModal(false); setEditingOrg(null) }}>{t('superAdmin.orgsPage.cancelBtn')}</button>
                 <motion.button whileTap={{ scale: 0.97 }} className="btn btn-primary" style={{ flex: 2 }}
                   onClick={handleSave} disabled={saving}>
-                  {saving ? (editingOrg ? 'Saving…' : 'Creating…') : (editingOrg ? '✓ Save Changes' : 'Create Organisation')}
+                  {saving ? (editingOrg ? t('superAdmin.orgsPage.savingState') : t('superAdmin.orgsPage.creatingState')) : (editingOrg ? t('superAdmin.orgsPage.saveChangesBtn') : t('superAdmin.orgsPage.createBtn'))}
                 </motion.button>
               </div>
             </motion.div>

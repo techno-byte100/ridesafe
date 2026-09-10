@@ -42,11 +42,21 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   )
 }
 
-export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }: { searchQuery?: string; currentUserRole?: string }) {
+export default function UsersTab({
+  searchQuery = '',
+  currentUserRole = 'ADMIN',
+  defaultRoleFilter = 'ALL',
+  lockRoleFilter = false
+}: {
+  searchQuery?: string;
+  currentUserRole?: string;
+  defaultRoleFilter?: string;
+  lockRoleFilter?: boolean;
+}) {
   const { t } = useTranslation()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
-  const [filterRole, setFilterRole] = useState('ALL')
+  const [filterRole, setFilterRole] = useState(defaultRoleFilter)
   const [filterOrg, setFilterOrg] = useState('ALL')
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(defaultForm)
@@ -80,7 +90,7 @@ export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }
     setToast(msg); setToastType(type); setTimeout(() => setToast(''), 3500)
   }
 
-  const openAddModal = () => { setEditingUser(null); setForm(defaultForm); setFormErrors({}); setShowModal(true) }
+  const openAddModal = () => { setEditingUser(null); setForm({ ...defaultForm, role: lockRoleFilter ? defaultRoleFilter : 'DRIVER' }); setFormErrors({}); setShowModal(true) }
 
   const openEditModal = (u: User) => {
     setEditingUser(u)
@@ -113,7 +123,7 @@ export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }
           })
       if (res.ok) {
         showToast(editingUser ? 'User updated!' : 'User created successfully!')
-        setShowModal(false); setForm(defaultForm); setFormErrors({}); setEditingUser(null); loadUsers()
+        setShowModal(false); setForm({ ...defaultForm, role: lockRoleFilter ? defaultRoleFilter : 'DRIVER' }); setFormErrors({}); setEditingUser(null); loadUsers()
       } else {
         const err = await res.json()
         showToast(err.error || (editingUser ? 'Failed to update user' : 'Failed to create user'), 'error')
@@ -211,10 +221,12 @@ export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }
 
         {/* Role / organisation filters */}
         <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <select className="select-field" value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ width: 'auto', minWidth: 160 }}>
-            <option value="ALL">All Roles</option>
-            {['ADMIN', 'DRIVER', 'PARENT', 'SCHOOL_ADMIN'].map(r => <option key={r} value={r}>{r}</option>)}
-          </select>
+          {!lockRoleFilter && (
+            <select className="select-field" value={filterRole} onChange={e => setFilterRole(e.target.value)} style={{ width: 'auto', minWidth: 160 }}>
+              <option value="ALL">All Roles</option>
+              {['ADMIN', 'DRIVER', 'PARENT', 'SCHOOL_ADMIN'].map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          )}
           {currentUserRole === 'SUPER_ADMIN' && orgs.length > 0 && (
             <select className="select-field" value={filterOrg} onChange={e => setFilterOrg(e.target.value)} style={{ width: 'auto', minWidth: 180 }}>
               <option value="ALL">All Organisations</option>
@@ -304,15 +316,21 @@ export default function UsersTab({ searchQuery = '', currentUserRole = 'ADMIN' }
                   />
                 </Field>
 
-                <Field label="Role *">
-                  <select className="select-field" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
-                    <option value="DRIVER">Driver</option>
-                    <option value="PARENT">Parent</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="SCHOOL_ADMIN">School Admin</option>
-                    {currentUserRole === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
-                  </select>
-                </Field>
+                {!lockRoleFilter ? (
+                  <Field label="Role *">
+                    <select className="select-field" value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))}>
+                      <option value="DRIVER">Driver</option>
+                      <option value="PARENT">Parent</option>
+                      <option value="ADMIN">Admin</option>
+                      <option value="SCHOOL_ADMIN">School Admin</option>
+                      {currentUserRole === 'SUPER_ADMIN' && <option value="SUPER_ADMIN">Super Admin</option>}
+                    </select>
+                  </Field>
+                ) : (
+                  <Field label="Role *">
+                    <input className="input-field" disabled value={form.role.replace('_', ' ')} />
+                  </Field>
+                )}
 
                 <Field label="Organisation">
                   <select className="select-field" value={form.organizationId} onChange={e => setForm(p => ({ ...p, organizationId: e.target.value }))}>
