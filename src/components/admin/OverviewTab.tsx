@@ -1,17 +1,19 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, Bus, AlertTriangle, GraduationCap, Settings } from 'lucide-react'
+import { Bus, AlertTriangle, Route, Settings, MapPin } from 'lucide-react'
 import { useAudio } from '@/hooks/useAudio'
 import { useTranslation } from '@/i18n/provider'
 
-interface StudentRecord { id: string; name: string; grade: string; level: string; parentContact1: string; status: string; isSelfPickup: boolean }
-interface TripRecord { id: string; status: string }
+interface BusRecord { id: string; plateNumber: string; capacity?: number }
+interface RouteRecord { id: string; name: string }
+interface TripRecord { id: string; status: string; route?: { name: string }; driver?: { name: string }; bus?: { plateNumber: string } }
 interface EmergencyRecord { id: string; timestamp: string; latitude?: number; longitude?: number; driver?: { name: string; phone?: string } }
 
 export default function OverviewTab({ currentUserRole }: { currentUserRole: string }) {
     const { t } = useTranslation()
-    const [students, setStudents] = useState<StudentRecord[]>([])
+    const [buses, setBuses] = useState<BusRecord[]>([])
+    const [routes, setRoutes] = useState<RouteRecord[]>([])
     const [trips, setTrips] = useState<TripRecord[]>([])
     const [pickupTimes, setPickupTimes] = useState('')
     const [schoolName, setSchoolName] = useState('')
@@ -37,15 +39,17 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
     useEffect(() => {
         const fetchAllData = async () => {
             try {
-                const [studentsRes, settingsRes, emergencyRes, tripsRes, adminSettingsRes] = await Promise.all([
-                    fetch('/api/students'),
+                const [busRes, routeRes, settingsRes, emergencyRes, tripsRes, adminSettingsRes] = await Promise.all([
+                    fetch('/api/admin/buses'),
+                    fetch('/api/admin/routes'),
                     fetch('/api/settings'),
                     fetch('/api/emergency'),
                     fetch('/api/trips'),
                     fetch('/api/admin/settings'),
                 ])
 
-                const studentsData = await studentsRes.json()
+                const busData = await busRes.json()
+                const routeData = await routeRes.json()
                 const settingsData = await settingsRes.json()
                 const emergencyData = await emergencyRes.json()
                 const tripsData = await tripsRes.json()
@@ -58,7 +62,8 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                 }
                 prevEmergenciesLength.current = alertsLength
 
-                setStudents(studentsData.students || [])
+                setBuses(busData.buses || [])
+                setRoutes(routeData.routes || [])
                 setPickupTimes((settingsData.times || []).join(', '))
                 // Only update name from server if user is NOT actively typing in the field
                 if (!isEditingRef.current) {
@@ -152,7 +157,6 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
 
     // Computed real stats
     const activeTrips = trips.filter((t: TripRecord) => t.status !== 'TRIP_COMPLETED').length
-    const presentStudents = students.filter((s: StudentRecord) => s.status === 'CHECKED_OUT').length
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -206,7 +210,7 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                                         className="btn btn-success" onClick={() => handleResolveEmergency(e.id)}
                                         style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <CheckCircle size={16} /> Resolve
+                                        Resolve
                                     </motion.button>
                                 </motion.div>
                             ))}
@@ -218,10 +222,10 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
             {/* Quick Stats - Bento Grid */}
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="bento-grid" style={{ marginBottom: '2.5rem' }}>
                 {[
-                    { icon: <GraduationCap size={24}/>, label: t('overview.totalStudents'),     val: students.length,                    color: 'var(--primary)' },
-                    { icon: <CheckCircle size={24}/>, label: t('overview.checkedIn'),         val: presentStudents,                    color: 'var(--success)' },
-                    { icon: <Bus size={24}/>, label: t('overview.activeTrips'),         val: activeTrips,                        color: 'var(--bus-yellow)' },
-                    { icon: <AlertTriangle size={24}/>, label: t('overview.openEmergencies'),     val: emergencies.length,                  color: emergencies.length > 0 ? 'var(--danger)' : 'var(--text-muted)' },
+                    { icon: <Bus size={24}/>, label: t('nav.fleet'), val: buses.length, color: 'var(--primary)' },
+                    { icon: <Route size={24}/>, label: t('nav.schedule') || 'Active Routes', val: routes.length, color: 'var(--success)' },
+                    { icon: <MapPin size={24}/>, label: t('overview.activeTrips'), val: activeTrips, color: 'var(--bus-yellow)' },
+                    { icon: <AlertTriangle size={24}/>, label: t('overview.openEmergencies'), val: emergencies.length, color: emergencies.length > 0 ? 'var(--danger)' : 'var(--text-muted)' },
                 ].map(({ icon, label, val, color }) => (
                     <motion.div key={label} variants={cardVariants} className="bento-card"
                         style={{ textAlign: 'center', justifyContent: 'center' }}>
@@ -243,10 +247,7 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                         <div className="input-group">
                             <label className="input-label">{t('overview.schoolName')}</label>
                             <input type="text" className="input-field" value={schoolName}
-                                minLength={3} maxLength={100}
-                                onChange={e => { isEditingRef.current = true; setSchoolName(e.target.value) }}
-                                onBlur={() => { /* keep isEditingRef true until saved */ }}
-                                placeholder="e.g. SK Taman Maju" />
+                                onChange={e => { isEditingRef.current = true; setSchoolName(e.target.value) }} placeholder="Organisation name" />
                             <div style={{ fontSize:'0.72rem', color:'var(--text-dim)', marginTop:2 }}>Min. 3 characters</div>
                         </div>
 
@@ -259,12 +260,12 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                             <div className="input-group">
-                                <label className="input-label">School Latitude</label>
+                                <label className="input-label">Latitude</label>
                                 <input type="text" inputMode="decimal" className="input-field" value={schoolLat}
                                     onChange={e => { isEditingRef.current = true; setSchoolLat(e.target.value) }} placeholder="3.1390" />
                             </div>
                             <div className="input-group">
-                                <label className="input-label">School Longitude</label>
+                                <label className="input-label">Longitude</label>
                                 <input type="text" inputMode="decimal" className="input-field" value={schoolLng}
                                     onChange={e => { isEditingRef.current = true; setSchoolLng(e.target.value) }} placeholder="101.6869" />
                             </div>
@@ -275,7 +276,7 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                             <input type="text" inputMode="decimal" className="input-field" value={geofenceRadius}
                                 onChange={e => { isEditingRef.current = true; setGeofenceRadius(e.target.value) }} placeholder="500" />
                             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                                How close a bus must be to the school pin to count as &quot;arrived&quot; / trigger ETA alerts
+                                How close a bus must be to the pin to count as &quot;arrived&quot; / trigger ETA alerts
                             </div>
                         </div>
 
@@ -298,8 +299,8 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                         </h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div style={{ padding: '1rem', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--surface-border)' }}>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{t('overview.totalStudents')} (All Orgs)</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>{students.length}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{t('nav.fleet')} (All Orgs)</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>{buses.length}</div>
                             </div>
                             <div style={{ padding: '1rem', borderRadius: 10, background: 'var(--surface-2)', border: '1px solid var(--surface-border)' }}>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>{t('overview.activeTrips')}</div>
@@ -316,52 +317,46 @@ export default function OverviewTab({ currentUserRole }: { currentUserRole: stri
                     </motion.div>
                 )}
 
-                {/* Students overview */}
+                {/* Active & Recent Trips Overview */}
                 <motion.div variants={cardVariants} className="bento-card" style={{ padding: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>{t('nav.students')} {t('nav.overview')}</h3>
+                        <h3 style={{ margin: 0 }}>{t('nav.liveTrips')} &amp; {t('overview.activeTrips')}</h3>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            <span className="badge badge-success">{presentStudents} IN</span>
-                            <span className="badge badge-pending">{students.length - presentStudents} OUT</span>
+                            <span className="badge badge-success">{activeTrips} Active</span>
+                            <span className="badge badge-pending">{trips.length} Total</span>
                         </div>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {students.slice(0, 15).map(student => (
-                            <motion.div key={student.id} whileHover={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
+                        {trips.slice(0, 10).map(trip => (
+                            <motion.div key={trip.id} whileHover={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
                                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                     padding: '0.875rem 1rem', background: 'rgba(255,255,255,0.02)',
                                     borderRadius: 10, border: '1px solid var(--surface-border)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     <div style={{ width: 36, height: 36, borderRadius: '50%',
-                                        background: 'linear-gradient(135deg,#4f46e5,#6366f1)',
+                                        background: 'linear-gradient(135deg,#FFD60A,#F5A623)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontWeight: 700, color: '#fff', fontSize: '0.9rem', flexShrink: 0 }}>
-                                        {student.name.charAt(0)}
+                                        fontWeight: 700, color: '#08080A', fontSize: '0.9rem', flexShrink: 0 }}>
+                                        <Bus size={18} />
                                     </div>
                                     <div>
-                                        <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{student.name}</div>
+                                        <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{trip.route?.name || 'Assigned Route'}</div>
                                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                            {student.grade} · {student.parentContact1}
+                                            Driver: {trip.driver?.name || 'Assigned'} · Bus: {trip.bus?.plateNumber || 'Fleet'}
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: 6 }}>
-                                    {student.isSelfPickup && <span className="badge badge-warning">Self-Pickup</span>}
-                                    <span className={`badge ${student.status === 'CHECKED_OUT' ? 'badge-success' : 'badge-pending'}`}>
-                                        {student.status.replace('_', ' ')}
+                                <div>
+                                    <span className={`badge ${trip.status === 'IN_PROGRESS' ? 'badge-warning' : trip.status === 'TRIP_COMPLETED' ? 'badge-success' : 'badge-pending'}`}>
+                                        {trip.status.replace(/_/g, ' ')}
                                     </span>
                                 </div>
                             </motion.div>
                         ))}
-                        {students.length === 0 && (
+                        {trips.length === 0 && (
                             <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                                No students registered yet. Go to the Students tab to add some.
-                            </div>
-                        )}
-                        {students.length > 15 && (
-                            <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 8 }}>
-                                ... and {students.length - 15} more. See the Students tab for the full list.
+                                No trips recorded yet.
                             </div>
                         )}
                     </div>
