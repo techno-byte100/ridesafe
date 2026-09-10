@@ -550,18 +550,6 @@ export default function ParentDashboard() {
                 {notifications.length === 0 && <div style={{ textAlign:'center', color:'var(--text-muted)', padding:20 }}>No activity yet</div>}
               </div>
 
-              {/* ── SOS Panic Button ── */}
-              <motion.button
-                whileHover={{ scale:1.02 }} whileTap={{ scale:0.95 }}
-                onClick={async () => {
-                  if (!confirm('🆘 Are you sure you want to send an emergency alert?')) return
-                  playAlert()
-                  await fetch('/api/emergency', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source:'PARENT' }) })
-                  alert('🆘 Emergency alert sent! School admin has been notified.')
-                }}
-                style={{ width:'100%', padding:'14px', marginTop:'20px', background:'linear-gradient(135deg,#dc2626,#ef4444)', color:'#fff', border:'none', borderRadius:14, fontWeight:800, fontSize:'1rem', cursor:'pointer', letterSpacing:'0.5px', boxShadow:'0 4px 20px rgba(239,68,68,0.3)' }}>
-                🆘 SOS EMERGENCY
-              </motion.button>
 
               {/* ── Rate Last Ride ── */}
               <div className="mobile-card" style={{ marginTop:14, padding:'16px' }}>
