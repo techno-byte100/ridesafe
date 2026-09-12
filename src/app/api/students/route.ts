@@ -25,9 +25,19 @@ export async function GET(req: NextRequest) {
         orderBy: { name: 'asc' }
       })
     } else if (user.role === 'PARENT') {
-      // Parents see only their own students
+      // Parents see only their own students with stop and route details
       students = await prisma.student.findMany({
-        where: { parentId: user.id }
+        where: { parentId: user.id },
+        include: {
+          pickupStop: true,
+          dropoffStop: true,
+          route: { select: { id: true, name: true, morningTime: true, afternoonTime: true } },
+          attendances: {
+            take: 5,
+            orderBy: { timestamp: 'desc' },
+            include: { trip: { select: { id: true, date: true, status: true } } }
+          }
+        }
       })
     } else {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -82,3 +92,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const user = await getUserFromSession()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { studentId, status } = body
+
+    if (!studentId || !status) {
+      return NextResponse.json({ error: 'Student ID and status are required' }, { status: 400 })
+    }
+
+    // Verify ownership if role is PARENT
+    if (user.role === 'PARENT') {
+      const owned = await prisma.student.findFirst({
+        where: { id: studentId, parentId: user.id }
+      })
+      if (!owned) {
+        return NextResponse.json({ error: 'Forbidden: Student not associated with parent account' }, { status: 403 })
+      }
+    } else if (!['ADMIN', 'SUPER_ADMIN', 'SCHOOL_ADMIN'].includes(user.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const updatedStudent = await prisma.student.update({
+      where: { id: studentId },
+      data: { status }
+    })
+
+    return NextResponse.json({ student: updatedStudent })
+  } catch (error) {
+    console.error('Error updating student transit status:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
